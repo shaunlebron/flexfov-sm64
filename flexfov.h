@@ -6,7 +6,6 @@
 #include "include/PR/gbi.h" // import Vp, Light_t
 #include "src/engine/graph_node.h" // import GraphNodeRoot, Gfx
 
-extern u8 flexFovOn;
 extern u8 flexFovSky;
 extern u8 flexFovSide;
 extern s16 flexFovRoll;
@@ -27,5 +26,6 @@ void flexfov_gfx_init(void);
 void flexfov_render_world(struct GraphNodeRoot *root, Vp *b, Vp *c, s32 clearColor);
 void flexfov_resize_cubemap(void);
 void flexfov_set_light_direction(Light_t *light);
+void flexfov_update_input(void);
 
 #endif // _FLEXFOV_H

@@ -3,6 +3,8 @@
 uniform samplerCube cubeTexture;
 varying vec2 vUV;
 uniform float camPitch;
+uniform bool useRubix;
+uniform bool useCube;
 
 float pi = 3.14159;
 
@@ -76,13 +78,70 @@ bool on_normal_fov_border(vec3 ray) {
 }
 
 vec3 blankRay = vec3(-1.0,-1.0,-1.0);
-vec4 cubecolor(vec3 ray) {
-  if (blankRay == ray) {
-    return vec4(0.0,0.0,0.0,0.0);
+
+
+vec4 clear = vec4(0.0, 0.0, 0.0, 0.0);
+vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
+vec4 green = vec4(0.0, 1.0, 0.0, 1.0);
+vec4 blue = vec4(0.0, 0.0, 1.0, 1.0);
+vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
+vec4 magenta = vec4(1.0, 0.0, 1.0, 1.0);
+vec4 cyan = vec4(0.0, 1.0, 1.0, 1.0);
+vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
+vec4 black = vec4(0.0, 0.0, 0.0, 1.0);
+
+vec4 rubix(vec3 ray) {
+  float x = ray.x;
+  float y = ray.y;
+  float z = ray.z;
+  float ax = abs(x);
+  float ay = abs(y);
+  float az = abs(z);
+
+  float u, v;
+  vec4 color;
+  if (ax >= ay && ax >= az) { // left or right
+    color = x > 0.0 ? red : blue;
+    u = y/ax;
+    v = z/ax;
+  } else if (ay >= ax && ay >= az) { // up or down
+    color = y > 0.0 ? magenta : cyan;
+    u = x/ay;
+    v = z/ay;
+  } else if (az >= ax && az >= ay) { // front or back
+    color = z > 0.0 ? white : black;
+    u = x/az;
+    v = y/az;
   }
-  vec4 color = textureCube(cubeTexture, cuberay(ray));
+
+  // normalize uv to 0 to 1
+  u = (u + 1.0) / 2.0;
+  v = (v + 1.0) / 2.0;
+
+  float numCells = 10.0;
+  float cellSize = 4.0;
+  float padSize = 1.0;
+  float blockSize = padSize + cellSize;
+  float numUnits = numCells * blockSize + padSize;
+
+  bool onGrid =
+    mod(u*numUnits, blockSize) < padSize ||
+    mod(v*numUnits, blockSize) < padSize;
+
+  if (onGrid) return clear;
+  return color;
+}
+
+vec4 cubecolor(vec3 ray) {
+  vec4 color = blankRay == ray ? mix(black, clear, 0.5) : textureCube(cubeTexture, cuberay(ray));
+  if (useRubix) {
+    vec4 rubixColor = rubix(ray);
+    if (rubixColor != clear) {
+      color = mix(color, rubixColor, 0.3);
+    }
+  }
   if (on_normal_fov_border(ray)) {
-    return mix(color, vec4(1.0, 1.0, 1.0, 1.0), 0.5);
+    color = mix(color, white, 0.5);
   }
   return color;
 }
@@ -200,7 +259,7 @@ vec3 cubenet(vec2 uv) {
 
 void main(void)
 {
-  vec3 ray = flex(vUV);
+  vec3 ray = useCube ? cubenet(vUV) : flex(vUV);
   gl_FragColor = cubecolor(ray);
 }
 

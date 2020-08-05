@@ -6,20 +6,45 @@
 #include "src/engine/math_util.h" // import atan2s
 #include "include/config.h" // import SCREEN_WIDTH, SCREEN_HEIGHT
 #include "src/game/camera.h" // import CAMERA_MODE_INSIDE_CANNON
-#include "src/game/game_init.h" // import gDisplayListHead
+#include "src/game/game_init.h" // import gDisplayListHead, gPlayer1Controller
 #include "include/PR/gu.h" // import guScaleF
 #include "include/gfx_dimensions.h" // import GFX_DIMENSIONS_FROM_LEFT_EDGE
 #include "src/game/ingame_menu.h" // import create_dl_translation_matrix, MENU_MTX_PUSH
 #include "src/pc/gfx/gfx_pc.h" // import gfx_current_dimensions
 
-u8 flexFovOn = TRUE;
+static u8 flexFovOn = TRUE;
 u8 flexFovSky;
 u8 flexFovSide;
 s16 flexFovRoll;
 
+static u8 useRubix = 0;
+static u8 useCube = 0;
+
 static float camPitch = 0;
 
 static const f32 PI = 32768.0f; // in s16 angle units
+
+static s16 rCount = 0;
+static s16 zCount = 0;
+static s16 aCount = 0;
+
+void flexfov_update_input(void) {
+  u8 r = (gPlayer1Controller->buttonDown & R_TRIG) > 0;
+  u8 z = (gPlayer1Controller->buttonDown & Z_TRIG) > 0;
+  u8 a = (gPlayer1Controller->buttonDown & A_BUTTON) > 0;
+  zCount = z != 0 ? zCount+1 : 0;
+  aCount = a != 0 ? aCount+1 : 0;
+  if (r) {
+    if (rCount < 0) {
+      if (zCount == 1) useRubix = !useRubix;
+      if (aCount == 1) useCube = !useCube;
+    }
+    if (rCount >= 0) { rCount++; }
+    if (rCount > 5)  { rCount = -1; flexFovOn = !flexFovOn; }
+  } else {
+    rCount = 0;
+  }
+}
 
 u8 flexfov_is_on(void) {
   extern struct Object *gMarioObject;
@@ -236,6 +261,8 @@ GLuint quadProg;
 GLint quadAttrXY;
 GLint quadAttrUV;
 GLint quadCamPitch;
+GLint quadUseRubix;
+GLint quadUseCube;
 
 // Z depths:
 //  * sky = -0.33
@@ -306,6 +333,8 @@ static void create_quad(void) {
   quadAttrXY = glGetAttribLocation(quadProg, "aXY");
   quadAttrUV = glGetAttribLocation(quadProg, "aUV");
   quadCamPitch = glGetUniformLocation(quadProg, "camPitch");
+  quadUseRubix = glGetUniformLocation(quadProg, "useRubix");
+  quadUseCube = glGetUniformLocation(quadProg, "useCube");
 }
 
 // set aspect-normalized uv
@@ -351,6 +380,8 @@ static void render_quad(void) {
   gfx_unload_current_shader();
   glUseProgram(quadProg);
   glUniform1f(quadCamPitch, camPitch);
+  glUniform1i(quadUseRubix, useRubix);
+  glUniform1i(quadUseCube, useCube);
 
   glEnableVertexAttribArray(quadAttrXY); glVertexAttribPointer(quadAttrXY, 2, GL_FLOAT, GL_FALSE, quadStride*sizeof(float), NULL);
   glEnableVertexAttribArray(quadAttrUV); glVertexAttribPointer(quadAttrUV, 2, GL_FLOAT, GL_FALSE, quadStride*sizeof(float), (void*)(2*sizeof(float)));

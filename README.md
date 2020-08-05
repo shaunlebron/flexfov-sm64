@@ -18,7 +18,6 @@ Play with 180° peripheral vision, as seen in [quake] and [minecraft].
 </table>
 
 outstanding issues:
-- crashes at blue switch level entrance
 - fog is non-uniform across cubefaces
 - camera shake and roll misaligns cubefaces
 - window in portrait mode clips cubefaces
