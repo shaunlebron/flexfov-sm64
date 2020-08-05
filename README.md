@@ -1,6 +1,8 @@
-# Flex FOV for SM64
+# flexfov for sm64
 
-_flexible field of view for super mario 64_
+Play with 180° peripheral vision, as seen in [quake] and [minecraft].
+
+🎥 See [demo video](https://youtu.be/EX-GF2JhLaI).
 
 <img src="img/summary.jpg">
 
@@ -15,3 +17,12 @@ _flexible field of view for super mario 64_
 </tr>
 </table>
 
+outstanding issues:
+- crashes at blue switch level entrance
+- fog is non-uniform across cubefaces
+- camera shake and roll misaligns cubefaces
+- window in portrait mode clips cubefaces
+- credit sequence misaligns cubefaces
+
+[quake]:https://github.com/shaunlebron/blinky
+[minecraft]:https://github.com/shaunlebron/flex-fov
