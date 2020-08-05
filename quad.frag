@@ -5,24 +5,28 @@ varying vec2 vUV;
 uniform float camPitch;
 uniform bool useRubix;
 uniform bool useCube;
+uniform float fov;
+uniform bool controlsOn;
 
 float pi = 3.14159;
 
-vec3 latlon_to_ray(float lat, float lon) {
-  //      +Y ^
-  //         |
-  //         |
-  //
-  //        * *
-  //     *       *
-  //    *   _+Z   *   --->
-  //    *   /|    *     +X
-  //     * /     *
-  //        * *
+vec3 latlon_to_ray(vec2 latlon) {
+  float lat = latlon.x;
+  float lon = latlon.y;
   float x = sin(lon)*cos(lat);
   float y = sin(lat);
   float z = cos(lon)*cos(lat);
   return vec3(x,y,z);
+}
+
+vec2 ray_to_latlon(vec3 ray) {
+  float x = ray.x;
+  float y = ray.y;
+  float z = ray.z;
+
+  float lat = asin(y);
+  float lon = atan(x,z);
+  return vec2(lat,lon);
 }
 
 // cubemap texture lookup vector
@@ -140,7 +144,7 @@ vec4 cubecolor(vec3 ray) {
       color = mix(color, rubixColor, 0.3);
     }
   }
-  if (on_normal_fov_border(ray)) {
+  if (controlsOn && on_normal_fov_border(ray)) {
     color = mix(color, white, 0.5);
   }
   return color;
@@ -170,9 +174,8 @@ vec2 stereographic_forward(vec3 ray) {
 }
 
 vec3 stereographic(vec2 uv) {
-  float fov = radians(180.0);
-  vec3 ray = latlon_to_ray(0.0, fov/2.0);
-  float scale = stereographic_forward(ray).x;
+  vec3 scaleRay = latlon_to_ray(vec2(0.0, radians(fov)/2.0));
+  float scale = stereographic_forward(scaleRay).x;
   return stereographic_inverse(uv * scale);
 }
 
@@ -190,10 +193,13 @@ vec3 panini_inverse(vec2 uv) {
   float S = (d+1.0)/(d+clon);
   float lon = atan(x,S*clon);
   float lat = atan(y,S);
-  return latlon_to_ray(lat,lon);
+  return latlon_to_ray(vec2(lat,lon));
 }
 
-vec2 panini_forward(float lat, float lon) {
+vec2 panini_forward(vec3 ray) {
+  vec2 latlon = ray_to_latlon(ray);
+  float lat = latlon.x;
+  float lon = latlon.y;
   float d = 1.0;
   float S = (d+1.0)/(d+cos(lon));
   float x = S*sin(lon);
@@ -202,8 +208,8 @@ vec2 panini_forward(float lat, float lon) {
 }
 
 vec3 panini(vec2 uv) {
-  float fov = radians(180.0);
-  float scale = panini_forward(0.0, fov/2.0).x;
+  vec3 scaleRay = latlon_to_ray(vec2(0.0, radians(fov)/2.0));
+  float scale = panini_forward(scaleRay).x;
   return panini_inverse(uv * scale);
 }
 
@@ -212,8 +218,72 @@ vec3 panini(vec2 uv) {
 //------------------------------------------------------------------------------
 
 vec3 flex(vec2 uv) {
-  float k = abs(camPitch)/(3.14159/2.0);
+  float k = abs(camPitch)/(pi/2.0);
   return mix(panini(uv),stereographic(uv),k);
+}
+
+//------------------------------------------------------------------------------
+// Mercator
+//------------------------------------------------------------------------------
+
+float sinh(float t) {
+  return (exp(t) - exp(-t)) / 2.0;
+}
+
+vec3 mercator_inverse(vec2 uv) {
+  float x = uv.x;
+  float y = uv.y;
+  if (abs(x) > pi) return blankRay;
+  float lon = x;
+  float lat = atan(sinh(y));
+  return latlon_to_ray(vec2(lat,lon));
+}
+
+vec2 mercator_forward(vec3 ray) {
+  vec2 latlon = ray_to_latlon(ray);
+  float lat = latlon.x;
+  float lon = latlon.y;
+  float x = lon;
+  float y = log(tan(pi*0.25+lat*0.5));
+  return vec2(x,y);
+}
+
+vec3 mercator(vec2 uv) {
+  vec3 scaleRay = latlon_to_ray(vec2(0.0, radians(fov)/2.0));
+  float scale = mercator_forward(scaleRay).x;
+  return mercator_inverse(uv * scale);
+}
+
+//------------------------------------------------------------------------------
+// Equirect
+//------------------------------------------------------------------------------
+
+vec3 equirect_inverse(vec2 uv) {
+  float x = uv.x;
+  float y = uv.y;
+  if (abs(x) > pi || abs(y) > pi/2.0) return blankRay;
+  float lon = x;
+  float lat = y;
+  return latlon_to_ray(vec2(lat,lon));
+}
+
+vec2 equirect_forward(vec3 ray) {
+  vec2 latlon = ray_to_latlon(ray);
+  float lat = latlon.x;
+  float lon = latlon.y;
+  float x = lon;
+  float y = lon;
+  return vec2(x,y);
+}
+
+vec3 equirect(vec2 uv) {
+  vec3 scaleRay = latlon_to_ray(vec2(0.0, radians(fov)/2.0));
+  float scale = equirect_forward(scaleRay).x;
+  vec3 mobiusRay = equirect_inverse(uv * scale);
+  return mobiusRay;
+  vec2 uv2 = mercator_forward(mobiusRay) + vec2(0.0, radians(45.0));
+  vec3 ray = mercator_inverse(uv2);
+  return ray;
 }
 
 //------------------------------------------------------------------------------
@@ -259,7 +329,13 @@ vec3 cubenet(vec2 uv) {
 
 void main(void)
 {
-  vec3 ray = useCube ? cubenet(vUV) : flex(vUV);
+  vec3 ray;
+  vec2 uv = vUV;
+  if (useCube) { ray = cubenet(uv); }
+  else if (fov <= 180.0) { ray = flex(uv); }
+  else if (fov < 360.0) { ray = mercator(uv); }
+  else if (fov == 360.0) { ray = equirect(uv); }
+
   gl_FragColor = cubecolor(ray);
 }
 

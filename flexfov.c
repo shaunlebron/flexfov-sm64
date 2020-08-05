@@ -11,40 +11,17 @@
 #include "include/gfx_dimensions.h" // import GFX_DIMENSIONS_FROM_LEFT_EDGE
 #include "src/game/ingame_menu.h" // import create_dl_translation_matrix, MENU_MTX_PUSH
 #include "src/pc/gfx/gfx_pc.h" // import gfx_current_dimensions
+#include "src/audio/external.h" // import play_sound
+#include "include/audio_defines.h" // import SOUND_MENU_MESSAGE_DISAPPEAR, SOUND_MENU_MESSAGE_APPEAR
+
+//------------------------------------------------------------------------------
+// State
+//------------------------------------------------------------------------------
 
 static u8 flexFovOn = TRUE;
 u8 flexFovSky;
 u8 flexFovSide;
 s16 flexFovRoll;
-
-static u8 useRubix = 0;
-static u8 useCube = 0;
-
-static float camPitch = 0;
-
-static const f32 PI = 32768.0f; // in s16 angle units
-
-static s16 rCount = 0;
-static s16 zCount = 0;
-static s16 aCount = 0;
-
-void flexfov_update_input(void) {
-  u8 r = (gPlayer1Controller->buttonDown & R_TRIG) > 0;
-  u8 z = (gPlayer1Controller->buttonDown & Z_TRIG) > 0;
-  u8 a = (gPlayer1Controller->buttonDown & A_BUTTON) > 0;
-  zCount = z != 0 ? zCount+1 : 0;
-  aCount = a != 0 ? aCount+1 : 0;
-  if (r) {
-    if (rCount < 0) {
-      if (zCount == 1) useRubix = !useRubix;
-      if (aCount == 1) useCube = !useCube;
-    }
-    if (rCount >= 0) { rCount++; }
-    if (rCount > 5)  { rCount = -1; flexFovOn = !flexFovOn; }
-  } else {
-    rCount = 0;
-  }
-}
 
 u8 flexfov_is_on(void) {
   extern struct Object *gMarioObject;
@@ -54,6 +31,77 @@ u8 flexfov_is_on(void) {
   u8 on = flexFovOn && marioOnScreen && !marioInCannon;
   return on;
 }
+
+// shader state
+static u8 useRubix = 0;
+static u8 useCube = 0;
+static float camPitch = 0;
+static float fov = 180.0f;
+
+//------------------------------------------------------------------------------
+// Controls
+//------------------------------------------------------------------------------
+
+static u8 controlsOn = FALSE;
+
+// button states
+static s16 rCount = 0;
+static u8 bz = 0;
+static u8 ba = 0;
+
+static const float fovOffBound = 90.0f;
+
+void flexfov_update_input(void) {
+  u8 r = (gPlayer1Controller->buttonDown & R_TRIG) > 0;
+  u8 z = (gPlayer1Controller->buttonDown & Z_TRIG) > 0;
+  u8 a = (gPlayer1Controller->buttonDown & A_BUTTON) > 0;
+  float sy = gPlayer1Controller->stickY;
+
+  if (!r) controlsOn = FALSE;
+
+  if (controlsOn) {
+    if (z && !bz) useRubix = !useRubix;
+    if (a && !ba) useCube = !useCube;
+    ba = a;
+    bz = z;
+
+    fov += sy/8.0f;
+
+    // toggle on/off when crossing 90° boundary
+    if (flexFovOn) {
+      if (fov < fovOffBound) { flexFovOn = FALSE; play_sound(SOUND_MENU_MESSAGE_DISAPPEAR, gDefaultSoundArgs); }
+    } else {
+      if (fov > fovOffBound) { flexFovOn = TRUE; play_sound(SOUND_MENU_MESSAGE_APPEAR, gDefaultSoundArgs); }
+    }
+    
+    // clamp fov
+    if (fov < fovOffBound) fov = fovOffBound;
+    if (fov > 360.0f) fov = 360.0f;
+
+    // disable mario controls
+    gPlayer1Controller->buttonDown = 0;
+    gPlayer1Controller->buttonPressed = 0;
+    gPlayer1Controller->stickX = 0;
+    gPlayer1Controller->stickY = 0;
+    gPlayer1Controller->stickMag = 0;
+    gPlayer3Controller->buttonDown = 0;
+    gPlayer3Controller->buttonPressed = 0;
+    gPlayer3Controller->stickX = 0;
+    gPlayer3Controller->stickY = 0;
+    gPlayer3Controller->stickMag = 0;
+  } else {
+    rCount = r ? rCount+1 : 0;
+    if (rCount > 5) {
+      controlsOn = TRUE;
+      s32 mode = set_cam_angle(0);
+      set_cam_angle(mode == 1 ? 2 : 1);
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
+// Camera
+//------------------------------------------------------------------------------
 
 void flexfov_set_cam(Vec4f *m) {
 #define R0(i) pR[i]
@@ -93,6 +141,7 @@ void flexfov_set_cam(Vec4f *m) {
   }
 
   // for billboards
+  const f32 PI = 32768.0f; // in s16 angle units
   flexFovRoll = atan2s(R(1), sqrtf(R(0)*R(0) + R(2)*R(2))) - PI / 2.0f;
   if (flexFovRoll == 0 && U(1) < 0) { // upside-down case when atan2 should return 180°
     flexFovRoll = -PI;
@@ -263,6 +312,8 @@ GLint quadAttrUV;
 GLint quadCamPitch;
 GLint quadUseRubix;
 GLint quadUseCube;
+GLint quadFov;
+GLint quadControlsOn;
 
 // Z depths:
 //  * sky = -0.33
@@ -329,12 +380,16 @@ static void create_quad(void) {
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
 
-  // Attrib and Uniform
+  // Attribs
   quadAttrXY = glGetAttribLocation(quadProg, "aXY");
   quadAttrUV = glGetAttribLocation(quadProg, "aUV");
+
+  // Uniforms
   quadCamPitch = glGetUniformLocation(quadProg, "camPitch");
   quadUseRubix = glGetUniformLocation(quadProg, "useRubix");
   quadUseCube = glGetUniformLocation(quadProg, "useCube");
+  quadFov = glGetUniformLocation(quadProg, "fov");
+  quadControlsOn = glGetUniformLocation(quadProg, "controlsOn");
 }
 
 // set aspect-normalized uv
@@ -382,6 +437,8 @@ static void render_quad(void) {
   glUniform1f(quadCamPitch, camPitch);
   glUniform1i(quadUseRubix, useRubix);
   glUniform1i(quadUseCube, useCube);
+  glUniform1f(quadFov, fov);
+  glUniform1i(quadControlsOn, controlsOn);
 
   glEnableVertexAttribArray(quadAttrXY); glVertexAttribPointer(quadAttrXY, 2, GL_FLOAT, GL_FALSE, quadStride*sizeof(float), NULL);
   glEnableVertexAttribArray(quadAttrUV); glVertexAttribPointer(quadAttrUV, 2, GL_FLOAT, GL_FALSE, quadStride*sizeof(float), (void*)(2*sizeof(float)));
