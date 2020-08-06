@@ -3,7 +3,6 @@
 attribute vec2 aXY;
 attribute vec2 aUV;
 varying vec2 vUV;
-//uniform float fov;
 
 void main(void)
 {
