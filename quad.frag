@@ -1,15 +1,44 @@
 #version 110
 
-uniform samplerCube cubeTexture;
+// SM64 originally plays at 4:3 with 60° of view.
+// The port extends the field of view for wider windows.
+// Our fullscreen quad follows this with a “4:3 aspect-normalized” UV:
+//
+//
+// u<-1     u=-1          u=0           u=1      u>1
+//  *--------|-------------|-------------|--------*  v=3/4
+//  |        :                           :        |
+//  |        :         inner 4:3         :        |
+//  |        :                           :        |
+//  |        :                           :        |
+//  |        :             o             :        -  v=0
+//  |        :          (origin)         :        |
+//  |        :                           :        |
+//  |        :                           :        |
+//  |        :                           :        |
+//  *--------|---------------------------|--------*  v=-3/4
+//            <------- desired fov ----->
+
 varying vec2 vUV;
-uniform float camPitch;
-uniform bool useRubix;
-uniform bool useCube;
-uniform float fov;
-uniform float mobiusZoom;
-uniform bool controlsOn;
+
+// Environment map
+uniform samplerCube cubeTexture;
+
+// Toggles
+uniform bool useRubix;    // show rubix grid overlay
+uniform bool useCube;     // use cubenet projection
+uniform bool controlsOn;  // controls are enabled (show normal fov box for reference)
+
+// Knobs
+uniform float fov;        // horizontal FOV from u=-1 to u=1
+uniform float camPitch;   // pitch (up/down) angle used to transition panini <-> stereographic
+uniform float mobiusZoom; // zoom center of image when fov > 180°
 
 float pi = 3.14159;
+
+//------------------------------------------------------------------------------
+// Rays
+//------------------------------------------------------------------------------
 
 vec3 latlon_to_ray(vec2 latlon) {
   float lat = latlon.x;
@@ -53,6 +82,9 @@ vec4 cyan = vec4(0.0, 1.0, 1.0, 1.0);
 vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
 vec4 black = vec4(0.0, 0.0, 0.0, 1.0);
 
+
+// Show the original 4:3 window at 60° fov.
+// (as a landmark reference for “home”)
 bool on_normal_fov_border(vec3 ray) {
   float x = ray.x;
   float y = ray.y;
@@ -92,6 +124,9 @@ bool on_normal_fov_border(vec3 ray) {
   return insideBorder;
 }
 
+
+// Show a 10x10 “rubix” grid on each cubeface
+// (serves as an “indicatrix” for assessing distortion)
 vec4 rubix(vec3 ray) {
   float x = ray.x;
   float y = ray.y;
@@ -176,7 +211,7 @@ vec4 cubecolor(vec3 ray) {
 }
 
 //------------------------------------------------------------------------------
-// Stereographic
+// Stereographic projection
 //------------------------------------------------------------------------------
 
 vec3 stereographic_inverse(vec2 uv) {
@@ -204,7 +239,7 @@ vec3 stereographic(vec2 uv) {
 }
 
 //------------------------------------------------------------------------------
-// Panini
+// Panini projection
 //------------------------------------------------------------------------------
 
 vec3 panini_inverse(vec2 uv) {
@@ -237,7 +272,7 @@ vec3 panini(vec2 uv) {
 }
 
 //------------------------------------------------------------------------------
-// Flex between Panini and Stereographic depending on pitch
+// “Flex” projection between Panini and Stereographic (using camPitch)
 //------------------------------------------------------------------------------
 
 vec3 flex_inverse(vec2 uv) {
@@ -256,7 +291,7 @@ vec3 flex(vec2 uv) {
 }
 
 //------------------------------------------------------------------------------
-// Mobius scale
+// Mobius scale (used for zooming Mercator and Equirect)
 //------------------------------------------------------------------------------
 
 float getMobiusScale() {
@@ -265,7 +300,7 @@ float getMobiusScale() {
 }
 
 //------------------------------------------------------------------------------
-// Mercator
+// Mercator projection
 //------------------------------------------------------------------------------
 
 float sinh(float t) {
@@ -306,7 +341,7 @@ vec3 mercator(vec2 uv) {
 }
 
 //------------------------------------------------------------------------------
-// Equirect
+// Equirectangular projection
 //------------------------------------------------------------------------------
 
 vec3 equirect_inverse(vec2 uv) {
@@ -338,7 +373,7 @@ vec3 equirect(vec2 uv) {
 }
 
 //------------------------------------------------------------------------------
-// Cube net
+// Cube net projection
 //------------------------------------------------------------------------------
 
 vec3 cubenet(vec2 uv) {
@@ -376,15 +411,17 @@ vec3 cubenet(vec2 uv) {
   return vec3(x,y,z);
 }
 
-
+//------------------------------------------------------------------------------
+// Main
+//------------------------------------------------------------------------------
 
 void main(void)
 {
   vec2 uv = vUV;
   vec3 ray;
-  if (useCube) { ray = cubenet(uv); }
+  if (useCube)           { ray = cubenet(uv); }
   else if (fov <= 180.0) { ray = flex(uv); }
-  else if (fov < 360.0) { ray = mercator(uv); }
+  else if (fov < 360.0)  { ray = mercator(uv); }
   else if (fov == 360.0) { ray = equirect(uv); }
   gl_FragColor = cubecolor(ray);
 }

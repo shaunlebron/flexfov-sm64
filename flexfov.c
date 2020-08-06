@@ -79,13 +79,13 @@ void flexfov_update_input(void) {
     return;
   }
 
-  // Toggle flags
+  // Toggles
   if (a && !heldA) useRubix = !useRubix;
   if (b && !heldB) useCube = !useCube;
   heldA = a;
   heldB = b;
 
-  // Fine-tuning
+  // Knobs
   if (z) {
 
     // Seesaw the mobius zoom with thumbstick left/right
@@ -118,16 +118,11 @@ void flexfov_update_input(void) {
   }
 
   // disable mario controls
-  gPlayer1Controller->buttonDown = 0;
-  gPlayer1Controller->buttonPressed = 0;
-  gPlayer1Controller->stickX = 0;
-  gPlayer1Controller->stickY = 0;
-  gPlayer1Controller->stickMag = 0;
-  gPlayer3Controller->buttonDown = 0;
-  gPlayer3Controller->buttonPressed = 0;
-  gPlayer3Controller->stickX = 0;
-  gPlayer3Controller->stickY = 0;
-  gPlayer3Controller->stickMag = 0;
+  gPlayer1Controller->buttonDown    = gPlayer3Controller->buttonDown = 0;
+  gPlayer1Controller->buttonPressed = gPlayer3Controller->buttonPressed = 0;
+  gPlayer1Controller->stickX        = gPlayer3Controller->stickX = 0;
+  gPlayer1Controller->stickY        = gPlayer3Controller->stickY = 0;
+  gPlayer1Controller->stickMag      = gPlayer3Controller->stickMag = 0;
 }
 
 //------------------------------------------------------------------------------
