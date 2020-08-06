@@ -6,6 +6,7 @@ uniform float camPitch;
 uniform bool useRubix;
 uniform bool useCube;
 uniform float fov;
+uniform float mobiusZoom;
 uniform bool controlsOn;
 
 float pi = 3.14159;
@@ -29,18 +30,28 @@ vec2 ray_to_latlon(vec3 ray) {
   return vec2(lat,lon);
 }
 
-// cubemap texture lookup vector
-// (accounting for upside-down textures)
-vec3 cuberay(vec3 ray) {
-  float x = ray.x;
-  float y = ray.y;
-  float z = ray.z;
-  float ax = abs(x);
-  float ay = abs(y);
-  float az = abs(z);
-  bool upOrDownFace = ay >= ax && ay >= az;
-  return upOrDownFace ? vec3(x,y,-z) : vec3(x,-y,z);
+// projections are scaled by fov
+// (by aligning u=1,v=0 with lat=0,lon=fov/2)
+vec3 scaleray() {
+  return latlon_to_ray(vec2(0.0, radians(fov)/2.0));
 }
+
+// inverse projections return this when uv is out of bounds
+vec3 blankRay = vec3(-1.0,-1.0,-1.0);
+
+//------------------------------------------------------------------------------
+// Colored Annotation Overlays
+//------------------------------------------------------------------------------
+
+vec4 clear = vec4(0.0, 0.0, 0.0, 0.0);
+vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
+vec4 green = vec4(0.0, 1.0, 0.0, 1.0);
+vec4 blue = vec4(0.0, 0.0, 1.0, 1.0);
+vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
+vec4 magenta = vec4(1.0, 0.0, 1.0, 1.0);
+vec4 cyan = vec4(0.0, 1.0, 1.0, 1.0);
+vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
+vec4 black = vec4(0.0, 0.0, 0.0, 1.0);
 
 bool on_normal_fov_border(vec3 ray) {
   float x = ray.x;
@@ -80,19 +91,6 @@ bool on_normal_fov_border(vec3 ray) {
   bool insideBorder = insideOuter && !insideInner;
   return insideBorder;
 }
-
-vec3 blankRay = vec3(-1.0,-1.0,-1.0);
-
-
-vec4 clear = vec4(0.0, 0.0, 0.0, 0.0);
-vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
-vec4 green = vec4(0.0, 1.0, 0.0, 1.0);
-vec4 blue = vec4(0.0, 0.0, 1.0, 1.0);
-vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
-vec4 magenta = vec4(1.0, 0.0, 1.0, 1.0);
-vec4 cyan = vec4(0.0, 1.0, 1.0, 1.0);
-vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
-vec4 black = vec4(0.0, 0.0, 0.0, 1.0);
 
 vec4 rubix(vec3 ray) {
   float x = ray.x;
@@ -136,14 +134,41 @@ vec4 rubix(vec3 ray) {
   return color;
 }
 
+//------------------------------------------------------------------------------
+// Cube lookup
+//------------------------------------------------------------------------------
+
+// cubemap texture lookup vector
+// (accounting for upside-down textures)
+vec3 cuberay(vec3 ray) {
+  float x = ray.x;
+  float y = ray.y;
+  float z = ray.z;
+  float ax = abs(x);
+  float ay = abs(y);
+  float az = abs(z);
+  bool upOrDownFace = ay >= ax && ay >= az;
+  return upOrDownFace ? vec3(x,y,-z) : vec3(x,-y,z);
+}
+
+// lookup color in cubemap
+// (accounting for colored overlays)
 vec4 cubecolor(vec3 ray) {
-  vec4 color = blankRay == ray ? mix(black, clear, 0.5) : textureCube(cubeTexture, cuberay(ray));
+  // translucent black if blank ray
+  if (blankRay == ray) return vec4(0.0, 0.0, 0.0, 0.5);
+
+  // get cube color
+  vec4 color = textureCube(cubeTexture, cuberay(ray));
+
+  // add rubix overlay
   if (useRubix) {
     vec4 rubixColor = rubix(ray);
     if (rubixColor != clear) {
       color = mix(color, rubixColor, 0.3);
     }
   }
+
+  // add normal fov border
   if (controlsOn && on_normal_fov_border(ray)) {
     color = mix(color, white, 0.5);
   }
@@ -174,8 +199,7 @@ vec2 stereographic_forward(vec3 ray) {
 }
 
 vec3 stereographic(vec2 uv) {
-  vec3 scaleRay = latlon_to_ray(vec2(0.0, radians(fov)/2.0));
-  float scale = stereographic_forward(scaleRay).x;
+  float scale = stereographic_forward(scaleray()).x;
   return stereographic_inverse(uv * scale);
 }
 
@@ -208,14 +232,23 @@ vec2 panini_forward(vec3 ray) {
 }
 
 vec3 panini(vec2 uv) {
-  vec3 scaleRay = latlon_to_ray(vec2(0.0, radians(fov)/2.0));
-  float scale = panini_forward(scaleRay).x;
+  float scale = panini_forward(scaleray()).x;
   return panini_inverse(uv * scale);
 }
 
 //------------------------------------------------------------------------------
 // Flex between Panini and Stereographic depending on pitch
 //------------------------------------------------------------------------------
+
+vec3 flex_inverse(vec2 uv) {
+  float k = abs(camPitch)/(pi/2.0);
+  return mix(panini_inverse(uv),stereographic_inverse(uv),k);
+}
+
+vec2 flex_forward(vec3 ray) {
+  float k = abs(camPitch)/(pi/2.0);
+  return mix(panini_forward(ray),stereographic_forward(ray),k);
+}
 
 vec3 flex(vec2 uv) {
   float k = abs(camPitch)/(pi/2.0);
@@ -249,9 +282,18 @@ vec2 mercator_forward(vec3 ray) {
 }
 
 vec3 mercator(vec2 uv) {
-  vec3 scaleRay = latlon_to_ray(vec2(0.0, radians(fov)/2.0));
+  float m = mix(1.0, 0.3, mobiusZoom);
+
+  vec3 scaleRay = scaleray();
+  if (mobiusZoom > 0.0) {
+    scaleRay = stereographic_inverse(stereographic_forward(scaleRay)/m);
+  }
   float scale = mercator_forward(scaleRay).x;
-  return mercator_inverse(uv * scale);
+  vec3 ray = mercator_inverse(uv * scale);
+  if (ray != blankRay && mobiusZoom > 0.0) {
+    ray = flex_inverse(flex_forward(ray)*m);
+  }
+  return ray;
 }
 
 //------------------------------------------------------------------------------
@@ -277,17 +319,17 @@ vec2 equirect_forward(vec3 ray) {
 }
 
 vec3 equirect(vec2 uv) {
-  vec3 scaleRay = latlon_to_ray(vec2(0.0, radians(fov)/2.0));
-  float scale = equirect_forward(scaleRay).x;
-  vec3 mobiusRay = equirect_inverse(uv * scale);
-  return mobiusRay;
-  vec2 uv2 = mercator_forward(mobiusRay) + vec2(0.0, radians(45.0));
-  vec3 ray = mercator_inverse(uv2);
+  float m = mix(1.0, 0.3, mobiusZoom);
+  float scale = equirect_forward(scaleray()).x;
+  vec3 ray = equirect_inverse(uv * scale);
+  if (ray != blankRay && mobiusZoom > 0.0) {
+    ray = flex_inverse(flex_forward(ray)*m);
+  }
   return ray;
 }
 
 //------------------------------------------------------------------------------
-// Debugging projections
+// Cube net
 //------------------------------------------------------------------------------
 
 vec3 cubenet(vec2 uv) {
@@ -329,21 +371,12 @@ vec3 cubenet(vec2 uv) {
 
 void main(void)
 {
-  vec3 ray;
   vec2 uv = vUV;
+  vec3 ray;
   if (useCube) { ray = cubenet(uv); }
   else if (fov <= 180.0) { ray = flex(uv); }
   else if (fov < 360.0) { ray = mercator(uv); }
   else if (fov == 360.0) { ray = equirect(uv); }
-
   gl_FragColor = cubecolor(ray);
 }
 
-/* DEBUGGING aspect box
-if (-1.0 < u && u < 1.0 &&
-    -0.75 < v && v < 0.75) {
-  gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5);
-} else {
-  gl_FragColor = vec4(0.0, 0.0, 0.0, 0.5);
-}
-*/

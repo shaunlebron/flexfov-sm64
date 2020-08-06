@@ -37,6 +37,7 @@ static u8 useRubix = 0;
 static u8 useCube = 0;
 static float camPitch = 0;
 static float fov = 180.0f;
+static float mobiusZoom = 0.0f;
 
 //------------------------------------------------------------------------------
 // Controls
@@ -50,22 +51,61 @@ static u8 bz = 0;
 static u8 ba = 0;
 
 static const float fovOffBound = 90.0f;
+static const float fovMidSnap = 180.0f;
+static const float fovSnapMargin = 10.0f;
+
+float getFov(void) {
+  if (fabsf(fov - fovMidSnap) < fovSnapMargin) return fovMidSnap;
+  return fov;
+}
 
 void flexfov_update_input(void) {
+  // get button states
   u8 r = (gPlayer1Controller->buttonDown & R_TRIG) > 0;
   u8 z = (gPlayer1Controller->buttonDown & Z_TRIG) > 0;
   u8 a = (gPlayer1Controller->buttonDown & A_BUTTON) > 0;
-  float sy = gPlayer1Controller->stickY;
+  u8 b = (gPlayer1Controller->buttonDown & B_BUTTON) > 0;
 
+  // use thumbstick position for scrolling values (as units per second)
+  //   - 64 is max stick magnitude
+  //   - 30 is frame rate
+  float scrollUPS = gPlayer1Controller->stickY / 64.0f / 30.0f; // per second
+
+  // Hold R for 5 frames to enable flex fov controls
+  // Release R to return normal controls
   if (!r) controlsOn = FALSE;
+  if (!controlsOn) {
+    rCount = r ? rCount+1 : 0;
+    if (rCount > 5) {
+      controlsOn = TRUE;
+      s32 mode = set_cam_angle(0);
+      set_cam_angle(mode == 1 ? 2 : 1);
+    }
+    return;
+  }
 
-  if (controlsOn) {
-    if (z && !bz) useRubix = !useRubix;
-    if (a && !ba) useCube = !useCube;
-    ba = a;
-    bz = z;
+  // Toggle flags
+  if (z && !bz) useRubix = !useRubix;
+  if (a && !ba) useCube = !useCube;
+  ba = a;
+  bz = z;
 
-    fov += sy/8.0f;
+  // Scroll values
+  if (b) {
+    // Scroll mobius zoom (advanced)
+    mobiusZoom += scrollUPS * 0.5; // 0.5/s
+
+    // clamp mobiusZoom
+    if (mobiusZoom < 0.0) mobiusZoom = 0.0;
+    else if (mobiusZoom > 1.0) mobiusZoom = 1.0;
+    else {
+      if (scrollUPS != 0) {
+        play_sound(SOUND_MOVING_AIM_CANNON, gDefaultSoundArgs);
+      }
+    }
+  } else {
+    // Scroll fov
+    fov += scrollUPS * 90.0; // 90°/s
 
     // toggle on/off when crossing 90° boundary
     if (flexFovOn) {
@@ -73,30 +113,28 @@ void flexfov_update_input(void) {
     } else {
       if (fov > fovOffBound) { flexFovOn = TRUE; play_sound(SOUND_MENU_MESSAGE_APPEAR, gDefaultSoundArgs); }
     }
-    
+
     // clamp fov
     if (fov < fovOffBound) fov = fovOffBound;
-    if (fov > 360.0f) fov = 360.0f;
-
-    // disable mario controls
-    gPlayer1Controller->buttonDown = 0;
-    gPlayer1Controller->buttonPressed = 0;
-    gPlayer1Controller->stickX = 0;
-    gPlayer1Controller->stickY = 0;
-    gPlayer1Controller->stickMag = 0;
-    gPlayer3Controller->buttonDown = 0;
-    gPlayer3Controller->buttonPressed = 0;
-    gPlayer3Controller->stickX = 0;
-    gPlayer3Controller->stickY = 0;
-    gPlayer3Controller->stickMag = 0;
-  } else {
-    rCount = r ? rCount+1 : 0;
-    if (rCount > 5) {
-      controlsOn = TRUE;
-      s32 mode = set_cam_angle(0);
-      set_cam_angle(mode == 1 ? 2 : 1);
+    else if (fov > 360.0f) fov = 360.0f;
+    else {
+      if (scrollUPS != 0) {
+        play_sound(SOUND_MOVING_AIM_CANNON, gDefaultSoundArgs);
+      }
     }
   }
+
+  // disable mario controls
+  gPlayer1Controller->buttonDown = 0;
+  gPlayer1Controller->buttonPressed = 0;
+  gPlayer1Controller->stickX = 0;
+  gPlayer1Controller->stickY = 0;
+  gPlayer1Controller->stickMag = 0;
+  gPlayer3Controller->buttonDown = 0;
+  gPlayer3Controller->buttonPressed = 0;
+  gPlayer3Controller->stickX = 0;
+  gPlayer3Controller->stickY = 0;
+  gPlayer3Controller->stickMag = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -191,7 +229,7 @@ static void set_tex_params(void) {
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); 
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
 void flexfov_resize_cubemap(void) {
@@ -264,7 +302,7 @@ static u8 currSideGl;
 static void init_cubeside(u8 side) {
   currSideGl = side;
   set_cubeside_viewport();
-  
+
   GLenum cubesideGL = cubesidesGL[side];
 	GLenum attachments[2] = {GL_COLOR_ATTACHMENT0, GL_NONE};
 
@@ -313,6 +351,7 @@ GLint quadCamPitch;
 GLint quadUseRubix;
 GLint quadUseCube;
 GLint quadFov;
+GLint quadMobiusZoom;
 GLint quadControlsOn;
 
 // Z depths:
@@ -389,6 +428,7 @@ static void create_quad(void) {
   quadUseRubix = glGetUniformLocation(quadProg, "useRubix");
   quadUseCube = glGetUniformLocation(quadProg, "useCube");
   quadFov = glGetUniformLocation(quadProg, "fov");
+  quadMobiusZoom = glGetUniformLocation(quadProg, "mobiusZoom");
   quadControlsOn = glGetUniformLocation(quadProg, "controlsOn");
 }
 
@@ -418,7 +458,7 @@ static void update_aspect(u32 w, u32 h) {
 
 static void render_quad(void) {
   restore_viewport();
-  glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // colors are already premultiplied, see previous usage of glBlendFuncSeparate
 
   u32 w,h;
@@ -437,7 +477,8 @@ static void render_quad(void) {
   glUniform1f(quadCamPitch, camPitch);
   glUniform1i(quadUseRubix, useRubix);
   glUniform1i(quadUseCube, useCube);
-  glUniform1f(quadFov, fov);
+  glUniform1f(quadFov, getFov());
+  glUniform1f(quadMobiusZoom, mobiusZoom);
   glUniform1i(quadControlsOn, controlsOn);
 
   glEnableVertexAttribArray(quadAttrXY); glVertexAttribPointer(quadAttrXY, 2, GL_FLOAT, GL_FALSE, quadStride*sizeof(float), NULL);
