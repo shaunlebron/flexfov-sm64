@@ -47,8 +47,8 @@ static u8 controlsOn = FALSE;
 
 // button states
 static s16 rCount = 0;
-static u8 bz = 0;
-static u8 ba = 0;
+static u8 heldA = 0;
+static u8 heldB = 0;
 
 static const float fovOffBound = 90.0f;
 static const float fovMidSnap = 180.0f;
@@ -66,11 +66,6 @@ void flexfov_update_input(void) {
   u8 a = (gPlayer1Controller->buttonDown & A_BUTTON) > 0;
   u8 b = (gPlayer1Controller->buttonDown & B_BUTTON) > 0;
 
-  // use thumbstick position for scrolling values (as units per second)
-  //   - 64 is max stick magnitude
-  //   - 30 is frame rate
-  float scrollUPS = gPlayer1Controller->stickY / 64.0f / 30.0f; // per second
-
   // Hold R for 5 frames to enable flex fov controls
   // Release R to return normal controls
   if (!r) controlsOn = FALSE;
@@ -85,26 +80,24 @@ void flexfov_update_input(void) {
   }
 
   // Toggle flags
-  if (z && !bz) useRubix = !useRubix;
-  if (a && !ba) useCube = !useCube;
-  ba = a;
-  bz = z;
+  if (a && !heldA) useRubix = !useRubix;
+  if (b && !heldB) useCube = !useCube;
+  heldA = a;
+  heldB = b;
 
-  // Scroll values
-  if (b) {
-    // Scroll mobius zoom (advanced)
-    mobiusZoom += scrollUPS * 0.5; // 0.5/s
+  // Fine-tuning
+  if (z) {
 
-    // clamp mobiusZoom
-    if (mobiusZoom < 0.0) mobiusZoom = 0.0;
-    else if (mobiusZoom > 1.0) mobiusZoom = 1.0;
-    else {
-      if (scrollUPS != 0) {
-        play_sound(SOUND_MOVING_AIM_CANNON, gDefaultSoundArgs);
-      }
-    }
+    // Seesaw the mobius zoom with thumbstick left/right
+    float seesaw = gPlayer1Controller->stickX / 64.0f;
+    mobiusZoom = seesaw;
+
   } else {
-    // Scroll fov
+
+    // Scroll fov with thumbstick up/down (as units per second)
+    //   - 64 is max stick magnitude
+    //   - 30 is frame rate
+    float scrollUPS = gPlayer1Controller->stickY / 64.0f / 30.0f; // per second
     fov += scrollUPS * 90.0; // 90°/s
 
     // toggle on/off when crossing 90° boundary

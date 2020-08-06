@@ -256,6 +256,15 @@ vec3 flex(vec2 uv) {
 }
 
 //------------------------------------------------------------------------------
+// Mobius scale
+//------------------------------------------------------------------------------
+
+float getMobiusScale() {
+  float k = mobiusZoom;
+  return k >= 0.0 ? mix(1.0, 0.5, k) : mix(1.0, 2.0, -k);
+}
+
+//------------------------------------------------------------------------------
 // Mercator
 //------------------------------------------------------------------------------
 
@@ -282,15 +291,15 @@ vec2 mercator_forward(vec3 ray) {
 }
 
 vec3 mercator(vec2 uv) {
-  float m = mix(1.0, 0.3, mobiusZoom);
+  float m = getMobiusScale();
 
   vec3 scaleRay = scaleray();
-  if (mobiusZoom > 0.0) {
+  if (mobiusZoom != 0.0) {
     scaleRay = stereographic_inverse(stereographic_forward(scaleRay)/m);
   }
   float scale = mercator_forward(scaleRay).x;
   vec3 ray = mercator_inverse(uv * scale);
-  if (ray != blankRay && mobiusZoom > 0.0) {
+  if (ray != blankRay && mobiusZoom != 0.0) {
     ray = flex_inverse(flex_forward(ray)*m);
   }
   return ray;
@@ -319,10 +328,10 @@ vec2 equirect_forward(vec3 ray) {
 }
 
 vec3 equirect(vec2 uv) {
-  float m = mix(1.0, 0.3, mobiusZoom);
+  float m = getMobiusScale();
   float scale = equirect_forward(scaleray()).x;
   vec3 ray = equirect_inverse(uv * scale);
-  if (ray != blankRay && mobiusZoom > 0.0) {
+  if (ray != blankRay && mobiusZoom != 0.0) {
     ray = flex_inverse(flex_forward(ray)*m);
   }
   return ray;
