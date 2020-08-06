@@ -1,10 +1,21 @@
+<img width="150px" src="img/LakituSM64.png" align="right">
+
 # flexfov for sm64
 
-Play with 180° peripheral vision, as seen in [quake] and [minecraft].
+Extra camera controls for panoramic play.
 
 🎥 See [demo video](https://youtu.be/EX-GF2JhLaI).
 
-<img src="img/summary.jpg">
+## Controls
+
+Hold R to use extra controls:
+
+* Thumbstick: change FOV (up to 360°)
+* A: overlay grid
+* B: box projection
+* Z + thumbstick: zoom center of the image when fov > 180°
+
+## How it works
 
 <table>
 <tr>
@@ -17,11 +28,16 @@ Play with 180° peripheral vision, as seen in [quake] and [minecraft].
 </tr>
 </table>
 
-outstanding issues:
+## Outstanding Issues
+
 - fog is non-uniform across cubefaces
 - camera shake and roll misaligns cubefaces
 - window in portrait mode clips cubefaces
 - credit sequence misaligns cubefaces
+
+## References
+
+As seen in [quake] and [minecraft].
 
 [quake]:https://github.com/shaunlebron/blinky
 [minecraft]:https://github.com/shaunlebron/flex-fov
