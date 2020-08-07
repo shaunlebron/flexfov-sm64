@@ -28,6 +28,7 @@ uniform samplerCube cubeTexture;
 uniform bool useRubix;    // show rubix grid overlay
 uniform bool useCube;     // use cubenet projection
 uniform bool controlsOn;  // controls are enabled (show normal fov box for reference)
+uniform bool zooming;
 
 // Knobs
 uniform float fov;        // horizontal FOV from u=-1 to u=1
@@ -169,6 +170,112 @@ vec4 rubix(vec3 ray) {
   return color;
 }
 
+bool on_fov_overlay(vec2 uv) {
+  // track
+  float h = 0.5;
+  vec2 center = vec2(-0.8, 0.0);
+  float y0 = center.y - h/2.0;
+  float y1 = center.y + h/2.0;
+
+  // knob position on track
+  vec2 knob = vec2(center.x, mix(y0, y1, (fov - 90.0) / (360.0 - 90.0)));
+  float knobR = 1.0/40.0;
+
+  // fov display
+  float fovR = 1.0/20.0;
+  vec2 fovPos = center + vec2(fovR*2.0, 0.0);
+
+  float thick = 0.0125/2.0;
+
+  // draw knob
+  if (distance(uv, knob) < knobR) { // inside knob
+    return true;
+  }
+
+  // draw fov
+  float angle = acos(dot(vec2(0,1), normalize(uv-knob)));
+  float dist = distance(uv, knob);
+  if (angle < radians(fov)/2.0 &&  fovR - thick < dist && dist < fovR) {
+    return true;
+  }
+
+  // draw track
+  if (abs(uv.x-center.x) < thick/2.0 && y0 < uv.y && uv.y < y1) {
+    return true;
+  }
+  return false;
+}
+
+vec4 fov_overlay(vec2 uv) {
+  float thick = 0.0125/2.0;
+  vec2 shadowUV = uv + vec2(-thick, thick);
+  if (on_fov_overlay(uv)) {
+    return white;
+  } else if (on_fov_overlay(shadowUV)) {
+    return black;
+  }
+  return clear;
+}
+
+bool on_zoom_overlay(vec2 uv) {
+  // track
+  float w = 0.5;
+  vec2 center = vec2(0.0, -0.75 + 0.2);
+  float x0 = center.x - w/2.0;
+  float x1 = center.x + w/2.0;
+
+  // knob position on track
+  float m = (mobiusZoom+1.0)/2.0;
+  vec2 knob = vec2(mix(x0, x1, m), center.y);
+  float knobR = 1.0/40.0;
+
+  float thick = 0.0125/2.0;
+
+  // draw knob
+  if (distance(uv, knob) < knobR) { // inside knob
+    return true;
+  }
+
+  bool insideX = x0-2.0*knobR < uv.x && uv.x < x1+2.0*knobR;
+  float distY = abs(uv.y-center.y);
+
+  // draw track
+  if (distY < thick/2.0 && insideX) {
+    return true;
+  }
+
+  // draw hills
+  if (insideX) {
+    float dh = thick * 3.0;
+    float h0 = dh*2.0;
+    float h1 = dh*5.0;
+
+    float outH = mix(h1, h0, m);
+    float inH = mix(h0, h1, m);
+
+    float curH = uv.x < center.x ?
+      mix(outH, inH, (uv.x - x0) / (w/2.0)) :
+      mix(inH, outH, (uv.x - center.x) / (w/2.0));
+
+    if (curH - thick < distY && distY < curH) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+vec4 zoom_overlay(vec2 uv) {
+  float thick = 0.0125/2.0;
+  vec2 shadowUV = uv + vec2(-thick, thick);
+  if (on_zoom_overlay(uv)) {
+    return white;
+  } else if (on_zoom_overlay(shadowUV)) {
+    return black;
+  }
+  return clear;
+}
+
 //------------------------------------------------------------------------------
 // Cube lookup
 //------------------------------------------------------------------------------
@@ -203,10 +310,27 @@ vec4 cubecolor(vec3 ray) {
     }
   }
 
-  // add normal fov border
-  if (controlsOn && on_normal_fov_border(ray)) {
-    color = mix(color, white, 0.5);
+  // control overlays
+  if (controlsOn) {
+
+    // add normal fov border
+    if (on_normal_fov_border(ray)) {
+      color = mix(color, white, 0.5);
+    }
+
+    vec4 fovColor = fov_overlay(vUV);
+    if (fovColor != clear) {
+      color = mix(color, fovColor, zooming ? 0.2 : 0.7);
+    }
+
+    if (fov > 180.0) {
+      vec4 zoomColor = zoom_overlay(vUV);
+      if (zoomColor != clear) {
+        color = mix(color, zoomColor, zooming ? 0.7 : 0.2);
+      }
+    }
   }
+
   return color;
 }
 

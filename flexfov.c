@@ -44,6 +44,7 @@ static float mobiusZoom = 0.0f;
 //------------------------------------------------------------------------------
 
 static u8 controlsOn = FALSE;
+static u8 zooming = FALSE;
 
 // button states
 static s16 rCount = 0;
@@ -66,9 +67,11 @@ void flexfov_update_input(void) {
   u8 a = (gPlayer1Controller->buttonDown & A_BUTTON) > 0;
   u8 b = (gPlayer1Controller->buttonDown & B_BUTTON) > 0;
 
+  if (!z) zooming = FALSE;
+  if (!r) controlsOn = FALSE;
+
   // Hold R for 5 frames to enable flex fov controls
   // Release R to return normal controls
-  if (!r) controlsOn = FALSE;
   if (!controlsOn) {
     rCount = r ? rCount+1 : 0;
     if (rCount > 5) {
@@ -87,7 +90,7 @@ void flexfov_update_input(void) {
 
   // Knobs
   if (z) {
-
+    zooming = TRUE;
     // Seesaw the mobius zoom with thumbstick left/right
     float seesaw = gPlayer1Controller->stickX / 64.0f;
     mobiusZoom = seesaw;
@@ -341,6 +344,7 @@ GLint quadUseCube;
 GLint quadFov;
 GLint quadMobiusZoom;
 GLint quadControlsOn;
+GLint quadZooming;
 
 // Z depths:
 //  * sky = -0.33
@@ -418,6 +422,7 @@ static void create_quad(void) {
   quadFov = glGetUniformLocation(quadProg, "fov");
   quadMobiusZoom = glGetUniformLocation(quadProg, "mobiusZoom");
   quadControlsOn = glGetUniformLocation(quadProg, "controlsOn");
+  quadZooming = glGetUniformLocation(quadProg, "zooming");
 }
 
 // set aspect-normalized uv
@@ -468,6 +473,7 @@ static void render_quad(void) {
   glUniform1f(quadFov, getFov());
   glUniform1f(quadMobiusZoom, mobiusZoom);
   glUniform1i(quadControlsOn, controlsOn);
+  glUniform1i(quadZooming, zooming);
 
   glEnableVertexAttribArray(quadAttrXY); glVertexAttribPointer(quadAttrXY, 2, GL_FLOAT, GL_FALSE, quadStride*sizeof(float), NULL);
   glEnableVertexAttribArray(quadAttrUV); glVertexAttribPointer(quadAttrUV, 2, GL_FLOAT, GL_FALSE, quadStride*sizeof(float), (void*)(2*sizeof(float)));
