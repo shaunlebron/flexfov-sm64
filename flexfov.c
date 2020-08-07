@@ -313,10 +313,10 @@ static void init_cubeside(u8 side) {
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-Light_t flexfov_light_direction(Light_t light) {
-  if (!flexfov_is_on()) return light;
+void flexfov_set_light_direction(Light_t *light) {
+  if (!flexfov_is_on()) return;
 
-  s8 x0=light.dir[0], y0=light.dir[1], z0=light.dir[2];
+  s8 x0=light->dir[0], y0=light->dir[1], z0=light->dir[2];
   s8 x,y,z;
 
   switch (currSideGl) {
@@ -328,9 +328,9 @@ Light_t flexfov_light_direction(Light_t light) {
     case FLEXFOV_CUBE_DOWN:  x =  x0; y = -z0; z =  y0; break;
   }
 
-  light.dir[0] = x;
-  light.dir[1] = y;
-  light.dir[2] = z;
+  light->dir[0] = x;
+  light->dir[1] = y;
+  light->dir[2] = z;
 }
 
 //------------------------------------------------------------------------------
@@ -468,8 +468,6 @@ static void render_quad(void) {
 
   extern void gfx_unload_current_shader(void);
   gfx_unload_current_shader();
-
-  gfx_rapi->unload_shader(rendering_state.shader_program);
 
   glUseProgram(quadProg);
   glUniform1f(quadCamPitch, camPitch);

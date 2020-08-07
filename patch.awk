@@ -1,6 +1,9 @@
 # Translate our simplified diff
 # into ed commands.
 
+ # allow comment lines (ignored)
+/^#/ { }
+
 # open next file (saving previous)
 /^\// { if (file) print "w";
          print "e " root $0;

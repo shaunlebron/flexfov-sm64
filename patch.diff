@@ -18,6 +18,13 @@
 - #define GFX_POOL_SIZE 6400
 + #define GFX_POOL_SIZE (6400*6)
 
+/src/game/game_init.c
+  #include <prevent_bss_reordering.h>
++ #include "flexfov.h"
+
+  gPlayer3Controller->buttonDown = gPlayer1Controller->buttonDown;
++ flexfov_update_input();
+
 /src/game/rendering_graph_node.c
   #include "sm64.h"
 + #include "flexfov.h"
@@ -60,7 +67,7 @@
 
 @ static void gfx_sp_vertex
 - calculate_normal_dir(&rsp.current_lights[i], rsp.current_lights_coeffs[i]);
-+ calculate_normal_dir(flexfov_light_direction(&rsp.current_lights[i]), rsp.current_lights_coeffs[i]);
++ Light_t l=rsp.current_lights[i]; flexfov_set_light_direction(&l); calculate_normal_dir(&l, rsp.current_lights_coeffs[i]);
 
 @ static void gfx_run_dl
   uint32_t opcode = cmd->words.w0 >> 24;
@@ -77,3 +84,20 @@
 @ static void gfx_sdl_handle_events
   window_height = event.window.data2;
 + flexfov_resize_cubemap();
+
+# mislabeled objects in vanish cap level
+# (only crashes if game tries rendering on first frame,
+#  which flexfov does, so we fix it explicitly here)
+/levels/vcutm/script.c
+-  OBJECT(/*model*/ MODEL_VCUTM_CHECKERBOARD_PLATFORM_SPAWNER,           /*pos*/  3251, -1082, -6256, /*angle*/ 0, 270, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
++  OBJECT(/*model*/ MODEL_NONE,                                          /*pos*/  3251, -1082, -6256, /*angle*/ 0, 270, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
+
+-  OBJECT(/*model*/ MODEL_VCUTM_CHECKERBOARD_PLATFORM_SPAWNER,           /*pos*/  2355, -1901, -6256, /*angle*/ 0, 270, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
++  OBJECT(/*model*/ MODEL_NONE,                                          /*pos*/  2355, -1901, -6256, /*angle*/ 0, 270, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
+
+-  OBJECT(/*model*/ MODEL_VCUTM_CHECKERBOARD_PLATFORM_SPAWNER,           /*pos*/  1459, -1594, -6256, /*angle*/ 0,  90, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
++  OBJECT(/*model*/ MODEL_NONE,                                          /*pos*/  1459, -1594, -6256, /*angle*/ 0,  90, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
+
+-  OBJECT(/*model*/ MODEL_VCUTM_CHECKERBOARD_PLATFORM_SPAWNER,           /*pos*/ -1151, -2413, -6256, /*angle*/ 0, 270, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
++  OBJECT(/*model*/ MODEL_NONE,                                          /*pos*/ -1151, -2413, -6256, /*angle*/ 0, 270, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
+
