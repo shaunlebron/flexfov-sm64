@@ -1,4 +1,4 @@
-src/game/area.c
+/src/game/area.c
   #include "level_table.h"
 + #include "flexfov.h"
 
@@ -6,7 +6,7 @@ src/game/area.c
 - geo_process_root(gCurrentArea->unk04, D_8032CE74, D_8032CE78, gFBSetColor);
 + flexfov_geo_process_root(gCurrentArea->unk04, D_8032CE74, D_8032CE78, gFBSetColor);
 
-src/game/camera.c
+/src/game/camera.c
   #include "level_table.h"
 + #include "flexfov.h"
 
@@ -14,11 +14,11 @@ src/game/camera.c
   perspective->fov = sFOVState.fov;
 + if (flexfov_is_on()) perspective->fov = 90.0f;
 
-src/game/game_init.h
+/src/game/game_init.h
 - #define GFX_POOL_SIZE 6400
 + #define GFX_POOL_SIZE (6400*6)
 
-src/game/rendering_graph_node.c
+/src/game/rendering_graph_node.c
   #include "sm64.h"
 + #include "flexfov.h"
 
@@ -44,11 +44,11 @@ src/game/rendering_graph_node.c
 - node->header.gfx.pos, gCurGraphNodeCamera->roll);
 + node->header.gfx.pos, flexfov_is_on() ? flexFovRoll : gCurGraphNodeCamera->roll);
 
-src/pc/gfx/gfx_opengl.c
+/src/pc/gfx/gfx_opengl.c
 - #include <GL/glew.h>
 + #include <OpenGL/gl3.h>
 
-src/pc/gfx/gfx_pc.c
+/src/pc/gfx/gfx_pc.c
   #include <assert.h>
 + #include "src/game/flexfov.h"
 
@@ -70,7 +70,7 @@ src/pc/gfx/gfx_pc.c
   gfx_rapi->init();
 + flexfov_gfx_init();
 
-src/pc/gfx/gfx_sdl2.c
+/src/pc/gfx/gfx_sdl2.c
   #include "gfx_screen_config.h"
 + #include "src/game/flexfov.h"
 
