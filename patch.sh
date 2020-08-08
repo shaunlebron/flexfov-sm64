@@ -37,3 +37,6 @@ rm $shaders
 # patch other files
 awk -v root="$repo" -f patch.awk patch.diff | ed
 
+# dev patch
+awk -v root="$repo" -f patch.awk patchdev.diff | ed
+

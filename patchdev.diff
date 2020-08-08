@@ -1,0 +1,12 @@
+# mute
+/src/pc/pc_main.c
+- audio_api->play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
++ //audio_api->play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
+
+# skip to level select
+/levels/entry.c
+- #include "levels/intro/header.h"
++ #include "levels/menu/header.h"
+
+- EXECUTE(/*seg*/ 0x14, /*script*/ _introSegmentRomStart, /*scriptEnd*/ _introSegmentRomEnd, /*entry*/ level_intro_entry_1),
++ EXECUTE(/*seg*/ 0x14, /*script*/ _introSegmentRomStart, /*scriptEnd*/ _introSegmentRomEnd, /*entry*/ level_main_menu_entry_1),
