@@ -173,7 +173,7 @@ vec4 rubix(vec3 ray) {
 bool on_fov_overlay(vec2 uv) {
   // track
   float h = 0.5;
-  vec2 center = vec2(-0.8, 0.0);
+  vec2 center = vec2(0.8, 0.0);
   float y0 = center.y - h/2.0;
   float y1 = center.y + h/2.0;
 
