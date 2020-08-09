@@ -185,7 +185,7 @@ bool on_fov_overlay(vec2 uv) {
   float knobR = 1.0/40.0;
 
   // fov display
-  float fovR = 1.0/20.0;
+  float fovR = 1.0/10.0;
   vec2 fovPos = center + vec2(fovR*2.0, 0.0);
 
   float thick = 0.0125/2.0;
@@ -198,7 +198,7 @@ bool on_fov_overlay(vec2 uv) {
   // draw fov
   float angle = acos(dot(vec2(0,1), normalize(uv-knob)));
   float dist = distance(uv, knob);
-  if (angle < radians(fov)/2.0 &&  fovR - thick < dist && dist < fovR) {
+  if (angle < radians(fov)/2.0 &&  fovR - thick*8.0 < dist && dist < fovR) {
     return true;
   }
 
