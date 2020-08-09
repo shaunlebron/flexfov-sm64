@@ -1,5 +1,10 @@
 #version 110
 
+// This is a shader that draws the wide angle projection
+// and the extra UI elements for controlling it.
+
+
+varying vec2 vUV;
 // SM64 originally plays at 4:3 with 60° of view.
 // The port extends the field of view for wider windows.
 // Our fullscreen quad follows this with a “4:3 aspect-normalized” UV:
@@ -19,8 +24,6 @@
 //  *--------|---------------------------|--------*  v=-3/4
 //            <------- desired fov ----->
 
-varying vec2 vUV;
-
 // Environment map
 uniform samplerCube cubeTexture;
 
@@ -28,7 +31,7 @@ uniform samplerCube cubeTexture;
 uniform bool useRubix;    // show rubix grid overlay
 uniform bool useCube;     // use cubenet projection
 uniform bool controlsOn;  // controls are enabled (show normal fov box for reference)
-uniform bool zooming;
+uniform bool zooming;     // z-trig held (currently changing `mobiusZoom`)
 
 // Knobs
 uniform float fov;        // horizontal FOV from u=-1 to u=1
