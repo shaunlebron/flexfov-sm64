@@ -1,0 +1,32 @@
+presence
+
+UI:
+  - make fov scrollbar non-linear
+  - show scrollbar if controlsOn and flexfov is off
+
+FOG:
+  - in `gfx_sp_vertex` fog_z is calculated after projection (z/w)
+      float winv = 1.0f / w;
+      float fog_z = z * winv * rsp.fog_mul + rsp.fog_offset;
+    - need to understand what the projection matrix really is doing with the w-component
+      http://www.songho.ca/opengl/gl_projectionmatrix.html
+
+CAMERA DESYNC during CUTSCENES:
+  - rollScreen
+  - shake_camera_fov(perspective)
+  - scaling also affected somewhere else
+  - rotation is off
+  - an extra camera transform is applied when dying or collecting a star/key
+
+PORTRAIT MODE broken
+  - cubeside texture is drawn correctly
+    but is being cropped when window is narrower than a square
+
+n64 function reference
+https://ultra64.ca/files/documentation/online-manuals/functions_reference_manual_2.0i/misc/home.html
+
+n64 tutorial and manual
+https://ultra64.ca/files/documentation/online-manuals/man-v5-1/
+
+correcting skybox orientation:
+http://www.3dcpptutorials.sk/index.php?id=24
