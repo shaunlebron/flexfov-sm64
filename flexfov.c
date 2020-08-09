@@ -20,8 +20,18 @@
 
 static u8 flexFovOn = TRUE;
 u8 flexFovSky;
-u8 flexFovSide;
 s16 flexFovRoll;
+
+u8 flexFovSide;
+enum FLEXFOV_CUBE_SIDE {
+  FLEXFOV_CUBE_FRONT,
+  FLEXFOV_CUBE_LEFT,
+  FLEXFOV_CUBE_RIGHT,
+  FLEXFOV_CUBE_BACK,
+  FLEXFOV_CUBE_UP,
+  FLEXFOV_CUBE_DOWN
+};
+
 
 u8 flexfov_is_on(void) {
   extern struct Object *gMarioObject;
