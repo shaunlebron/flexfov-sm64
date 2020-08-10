@@ -31,9 +31,7 @@ Hold R to use extra controls:
 ## Outstanding Issues
 
 - fog is non-uniform across cubefaces
-- camera shake and roll misaligns cubefaces
 - window in portrait mode clips cubefaces
-- credit sequence misaligns cubefaces
 
 ## References
 
