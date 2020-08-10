@@ -1,0 +1,143 @@
+
+# Abstract purported equivalence
+
+There’s some weird math that I don’t understand that relates Mercator and
+Stereographic as being on some kind of continuum using polyconic projections?
+
+
+# Strange apparent equivalence
+
+When using stereographic projection (doubled) to zoom equirect, I was quite
+surprised after going through the “Mercator Redemption” paper and going through
+a more involved ceremony to do the same thing with Mercator, having to not
+double the projection size but to actually rotate the globe 90° toward the
+north pole, shift the projection down, then unrotate the globe -90°, produced
+the same image as the simpler stereographic.
+
+
+# Is there a simple equivalence
+
+Both cylinder and spheres look like circles from top-down.
+
+Panini is cylindrical            \_____   relationship known
+Stereographic is spherical       /
+
+
+Mercator is cylindrical 
+
+
+Fisheye is an unrolling of a sphere
+Equirect is an unrolling of a cylinder
+
+Rectilinear is a perspective at the center of an idealized globe
+
+Panini is a perspective from a cylinder perimeter
+Stereographic is a perspective from a sphere perimeter
+
+Cylindrical is both:
+  - an unrolling of a cylinder
+  - and a perspective at the center of a cylinder
+
+Mercator is both:
+  - an unrolling of a cylinder
+  - and a perspective from a cylinder perimeter???? <-----
+
+
+
+Deriving Stereographic
+
+  forward (sphere xyz -> plane xy)
+    plane @ z=1
+    camera @ z=-1
+    sphere radius of 1 @ z=0
+
+
+    dz = z > 0 ? 1+z : 1-z     <---- z distance between point and cam
+    z' = 2                     <---- z distance between plane and cam
+
+
+     x/dz = x'/2
+ => 2x/dz = x'
+
+
+                                     .|
+                                  .   |
+                               .      |
+                            .|        |  x'
+                         .   x        |
+                       .     |        |
+    |------------z---o---z---/--------|
+   cam
+
+
+
+top down  (x up, z right)
+
+     x/z = x'/z'
+  => x/z = x'/1
+  => x/z = x'
+                   .|
+                .   |
+             .      |
+          .|        |  x'
+       .   x        |
+     .     |        |
+    ---z---/--------|
+            
+
+    <------ 1 ----->
+
+side  (y up, z right)
+
+     y/z = y'/z'
+  => y/z = y'/1
+  => y/z = y'
+                   .|
+                .   |
+             .      |
+          .|        |  y'
+       .   y        |
+     .     |        |
+    ---z---/--------|
+            
+
+
+Deriving Mercator
+
+  (dud)
+
+
+stereographic maps 360° to an infinite line
+
+centered perspective maps 180° to an infinite line
+
+mercator maps 180° to an infinite line
+
+  take the poles of the globe, squash them to the center 
+    the globe now looks like a torus (donut) whose center donut-hole is of radius 0
+
+
+
+
+(I’ve probably explored one of these already)
+
+1. y = stereographic projection of the 180° meridians
+
+    forward:
+      u = lon
+      v = 2*tan(lat/2)
+
+    inverse:
+      lon = u
+      lat = 2*atan(v/2)
+
+2. y = stereographic projection of the 180° meridians if the poles were squashed to the center (a horn torus)
+
+    forward:
+      u = lon
+      v = 2*tan(lat)
+
+    inverse:
+      lon = u
+      lat = atan(v/2)
+

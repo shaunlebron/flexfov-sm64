@@ -18,5 +18,5 @@ popd
 awk -v root="$repo" -f patch.awk patch.diff | ed
 
 # dev patch
-awk -v root="$repo" -f patch.awk patchdev.diff | ed
+#awk -v root="$repo" -f patch.awk scratch/patchdev.diff | ed
 
