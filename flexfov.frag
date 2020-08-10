@@ -220,65 +220,6 @@ vec4 fov_overlay(vec2 uv) {
   return clear;
 }
 
-bool on_zoom_overlay(vec2 uv) {
-  // track
-  float w = 0.5;
-  vec2 center = vec2(0.0, -0.75 + 0.2);
-  float x0 = center.x - w/2.0;
-  float x1 = center.x + w/2.0;
-
-  // knob position on track
-  float m = (mobiusZoom+1.0)/2.0;
-  vec2 knob = vec2(mix(x0, x1, m), center.y);
-  float knobR = 1.0/40.0;
-
-  float thick = 0.0125/2.0;
-
-  // draw knob
-  if (distance(uv, knob) < knobR) { // inside knob
-    return true;
-  }
-
-  bool insideX = x0-2.0*knobR < uv.x && uv.x < x1+2.0*knobR;
-  float distY = abs(uv.y-center.y);
-
-  // draw track
-  if (distY < thick/2.0 && insideX) {
-    return true;
-  }
-
-  // draw hills
-  if (insideX) {
-    float dh = thick * 3.0;
-    float h0 = dh*2.0;
-    float h1 = dh*5.0;
-
-    float outH = mix(h1, h0, m);
-    float inH = mix(h0, h1, m);
-
-    float curH = uv.x < center.x ?
-      mix(outH, inH, (uv.x - x0) / (w/2.0)) :
-      mix(inH, outH, (uv.x - center.x) / (w/2.0));
-
-    if (curH - thick < distY && distY < curH) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-vec4 zoom_overlay(vec2 uv) {
-  float thick = 0.0125/2.0;
-  vec2 shadowUV = uv + vec2(-thick, thick);
-  if (on_zoom_overlay(uv)) {
-    return white;
-  } else if (on_zoom_overlay(shadowUV)) {
-    return black;
-  }
-  return clear;
-}
-
 //------------------------------------------------------------------------------
 // Cube lookup
 //------------------------------------------------------------------------------
@@ -324,13 +265,6 @@ vec4 cubecolor(vec3 ray) {
     vec4 fovColor = fov_overlay(vUV);
     if (fovColor != clear) {
       color = mix(color, fovColor, zooming ? 0.2 : 0.7);
-    }
-
-    if (fov > 180.0) {
-      vec4 zoomColor = zoom_overlay(vUV);
-      if (zoomColor != clear) {
-        color = mix(color, zoomColor, zooming ? 0.7 : 0.2);
-      }
     }
   }
 
@@ -547,7 +481,7 @@ void main(void)
   vec2 uv = vUV;
   vec3 ray;
   if (useCube)           { ray = cubenet(uv); }
-  else if (fov <= 180.0) { ray = flex(uv); }
+  //else if (fov <= 180.0) { ray = flex(uv); }
   else if (fov < 360.0)  { ray = mercator(uv); }
   else if (fov == 360.0) { ray = equirect(uv); }
   gl_FragColor = cubecolor(ray);

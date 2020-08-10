@@ -47,7 +47,15 @@ static u8 useRubix = 0;
 static u8 useCube = 0;
 static float camPitch = 0;
 static float fov = 180.0f;
-static float mobiusZoom = 0.0f;
+static float mobiusZoom = -1.0f;
+
+float getMobiusZoom(void) {
+  if (180.0f < fov) {
+    float t = (fov - 180.0f)/180.0f;
+    return -(1.0f - t);
+  }
+  return -1.0f;
+}
 
 //------------------------------------------------------------------------------
 // Controls
@@ -62,13 +70,6 @@ static u8 heldA = 0;
 static u8 heldB = 0;
 
 static const float fovOffBound = 90.0f;
-static const float fovMidSnap = 180.0f;
-static const float fovSnapMargin = 10.0f;
-
-float getFov(void) {
-  if (fabsf(fov - fovMidSnap) < fovSnapMargin) return fovMidSnap;
-  return fov;
-}
 
 void flexfov_update_input(void) {
   // get button states
@@ -377,7 +378,23 @@ static GLfloat quadVerts[] = {
 static const u8 numQuadVerts = 6;
 static const u8 quadStride = 4;
 
-#include "flexfov_shaders.c" // import vs_src, fs_src
+static const char *quadFragSrc=
+#include "flexfov.frag"
+;
+
+static const char *quadVertSrc =
+"#version 110\n"
+"\n"
+"attribute vec2 aXY;\n"
+"attribute vec2 aUV;\n"
+"varying vec2 vUV;\n"
+"\n"
+"void main(void)\n"
+"{\n"
+"  vUV = aUV;\n"
+"  gl_Position = vec4(aXY, 1.0, 1.0);\n"
+"}\n"
+;
 
 static void create_quad(void) {
 
@@ -387,7 +404,7 @@ static void create_quad(void) {
 
   // Vertex Shader
   GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vs_src, NULL);
+  glShaderSource(vertex_shader, 1, &quadVertSrc, NULL);
   glCompileShader(vertex_shader);
   glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
   if (!success) {
@@ -402,7 +419,7 @@ static void create_quad(void) {
 
   // Fragment Shader
   GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fs_src, NULL);
+  glShaderSource(fragment_shader, 1, &quadFragSrc, NULL);
   glCompileShader(fragment_shader);
   glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
   if (!success) {
@@ -483,8 +500,8 @@ static void render_quad(void) {
   glUniform1f(quadCamPitch, camPitch);
   glUniform1i(quadUseRubix, useRubix);
   glUniform1i(quadUseCube, useCube);
-  glUniform1f(quadFov, getFov());
-  glUniform1f(quadMobiusZoom, mobiusZoom);
+  glUniform1f(quadFov, fov);
+  glUniform1f(quadMobiusZoom, getMobiusZoom());
   glUniform1i(quadControlsOn, controlsOn);
   glUniform1i(quadZooming, zooming);
 
