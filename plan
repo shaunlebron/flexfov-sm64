@@ -11,13 +11,6 @@ FOG:
     - need to understand what the projection matrix really is doing with the w-component
       http://www.songho.ca/opengl/gl_projectionmatrix.html
 
-CAMERA DESYNC during CUTSCENES:
-  - rollScreen
-  - shake_camera_fov(perspective)
-  - scaling also affected somewhere else
-  - rotation is off
-  - an extra camera transform is applied when dying or collecting a star/key
-
 PORTRAIT MODE broken
   - cubeside texture is drawn correctly
     but is being cropped when window is narrower than a square

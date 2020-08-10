@@ -11,7 +11,7 @@
 + #include "flexfov.h"
 
 @ Gfx *geo_camera_fov
-  perspective->fov = sFOVState.fov;
+  shake_camera_fov(perspective);
 + if (flexfov_is_on()) perspective->fov = 90.0f;
 
 /src/game/game_init.h
@@ -33,6 +33,9 @@
 + if (flexfov_is_on() && flexFovSky) return;
 
 @ static void geo_process_camera
++ if (!flexfov_is_on())
+  gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(rollMtx), G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH);
+
   mtxf_mul(gMatStack[gMatStackIndex + 1], cameraTransform, gMatStack[gMatStackIndex]);
 + if (flexfov_is_on()) flexfov_set_cam(gMatStack[gMatStackIndex + 1]);
 
