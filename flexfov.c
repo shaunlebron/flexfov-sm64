@@ -48,8 +48,12 @@ static u8 useCube = 0;
 static float camPitch = 0;
 static float fov = 180.0f;
 static float mobiusZoom = -1.0f;
+static u8 manualMobiusZoom = FALSE;
 
 float getMobiusZoom(void) {
+  if (manualMobiusZoom) {
+    return mobiusZoom;
+  }
   if (180.0f < fov) {
     float t = (fov - 180.0f)/180.0f;
     return -(1.0f - t);
@@ -105,7 +109,7 @@ void flexfov_update_input(void) {
     // Seesaw the mobius zoom with thumbstick left/right
     float seesaw = gPlayer1Controller->stickX / 64.0f;
     mobiusZoom = seesaw;
-
+    manualMobiusZoom = TRUE;
   } else {
 
     // Scroll fov with thumbstick up/down (as units per second)
@@ -127,6 +131,7 @@ void flexfov_update_input(void) {
     else {
       if (scrollUPS != 0) {
         play_sound(SOUND_MOVING_AIM_CANNON, gDefaultSoundArgs);
+        manualMobiusZoom = FALSE;
       }
     }
   }
