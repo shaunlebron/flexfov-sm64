@@ -127,9 +127,12 @@ panini alone, leading to our use of it to feather the transition._
 - fog is non-uniform across cubefaces
 - window in portrait mode clips cubefaces
 
-## References
+## See Also
 
-As seen in [quake] and [minecraft].
+This project shares a lineage with the following projects:
+
+1. [Blinky for quake][quake]
+2. [Flex FOV for minecraft][minecraft].  Latest code [here](https://github.com/18107/Flex-FOV-fabric)
 
 [quake]:https://github.com/shaunlebron/blinky
 [minecraft]:https://github.com/shaunlebron/flex-fov
