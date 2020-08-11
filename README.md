@@ -34,6 +34,8 @@ We choose the best default projection based on your desired FOV, and let you
 scale the center region if you want.  We do this as fluidly as possible using
 the following knobs, projections, and procedures.
 
+🎥 See [knob demo](https://imgur.com/a/yuxfbP7)
+
 ### Knobs
 
 - fov (manual)
