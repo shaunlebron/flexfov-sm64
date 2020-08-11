@@ -28,6 +28,77 @@ Hold R to use extra controls:
 </tr>
 </table>
 
+## Construction
+
+We choose the best default projection based on your desired FOV, and let you
+scale the center region if you want.  We do this as fluidly as possible using
+the following knobs, projections, and procedures.
+
+### Knobs
+
+- fov (manual)
+- pitch (auto)
+- mobius (auto or manual)
+
+FOV and mobius are coupled when automatic:
+
+```
+                       180°            360°
+      fov <-------------|--------------->
+                        |--------------->   mobius
+               0.5     0.5            1.0
+```
+
+### Projections
+
+- panini (architecture)
+- stereographic (ground/sky)
+- mercator (world)
+
+```
+             0°     pitch     ±90°
+      panini <------------------> stereographic
+                      ^
+                      |
+                      | mobius
+                      |
+                      v
+                   mercator
+```
+
+### Procedures
+
+Key:
+
+```
+    _
+   (_)  >  ---     Forward projection (sphere to plane)
+            _
+   ---  >  (_)     Inverse projection (plane to sphere)
+
+   ---  >  ---     Scale (plane to plane)
+```
+
+Overview:
+
+```
+    _                       _
+   (_)  >  ---  >  ---  >  (_)  > --- > ---       <--- topologies
+    1       2       3       4      5     6
+
+          pitch   mobius                fov       <--- relevant knobs
+         ---------------         -----------
+             panini/               mercator       <--- projections
+          stereographic
+```
+
+1. Sphere of pixels collected from cubemap.
+2. Forward projection to plane, using pitch-based panini-stereographic.
+3. Scale using the mobius factor.
+4. Inverse projection to sphere, using original panini-stereographic (non-scaled).
+5. Forward projection to plane using mercator.
+6. Scale such that the desired fov range touches screen bounds.
+
 ## Outstanding Issues
 
 - fog is non-uniform across cubefaces
