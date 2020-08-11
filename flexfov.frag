@@ -300,26 +300,32 @@ vec3 cuberay(vec3 ray) {
 // (accounting for colored overlays)
 vec4 cubecolor(vec3 ray) {
   // translucent black if blank ray
-  if (blankRay == ray) return vec4(0.0, 0.0, 0.0, 0.5);
+  vec4 color;
 
-  // get cube color
-  vec4 color = textureCube(cubeTexture, cuberay(ray));
+  if (blankRay == ray) {
+    color = vec4(0.0, 0.0, 0.0, 0.5);
+  } else {
 
-  // add rubix overlay
-  if (useRubix) {
-    vec4 rubixColor = rubix(ray);
-    if (rubixColor != clear) {
-      color = mix(color, rubixColor, 0.3);
+    // get cube color
+    color = textureCube(cubeTexture, cuberay(ray));
+
+    // add rubix overlay
+    if (useRubix) {
+      vec4 rubixColor = rubix(ray);
+      if (rubixColor != clear) {
+        color = mix(color, rubixColor, 0.3);
+      }
     }
+
+    // add normal fov border
+    if (controlsOn && on_normal_fov_border(ray)) {
+      color = mix(color, white, 0.5);
+    }
+
   }
 
   // control overlays
   if (controlsOn) {
-
-    // add normal fov border
-    if (on_normal_fov_border(ray)) {
-      color = mix(color, white, 0.5);
-    }
 
     vec4 fovColor = fov_overlay(vUV);
     if (fovColor != clear) {
