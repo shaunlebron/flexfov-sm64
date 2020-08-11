@@ -75,6 +75,9 @@ static s16 rCount = 0;
 static u8 heldA = 0;
 static u8 heldB = 0;
 
+// stick state
+static u8 waitingForCenter = FALSE;
+
 static const float fovOffBound = 90.0f;
 
 void flexfov_update_input(void) {
@@ -106,13 +109,17 @@ void flexfov_update_input(void) {
   heldB = b;
 
   // Knobs
+  float stickX = gPlayer1Controller->stickX / 64.0f;
+  if (stickX == 0.0f) {
+    waitingForCenter = FALSE;
+  }
   if (z) {
     zooming = TRUE;
     // Seesaw the mobius zoom with thumbstick left/right
-    float seesaw = gPlayer1Controller->stickX / 64.0f;
-    mobiusZoom = seesaw;
+    mobiusZoom = stickX;
     manualMobiusZoom = TRUE;
-  } else {
+    waitingForCenter = TRUE;
+  } else if (!waitingForCenter) {
 
     // Scroll fov with thumbstick up/down (as units per second)
     //   - 64 is max stick magnitude
