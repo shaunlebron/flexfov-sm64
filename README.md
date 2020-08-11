@@ -106,10 +106,9 @@ from the center of the screen.  The scaling is done on a projected plane, then
 projected back to the sphere.  The spherical image is now warped by the
 projection.  Why?  Two reasons:
 
-1. Feathering the transition to mercator after 180°.
-  - It looks more natural (than ray interpolation) to  “bake in”
-    the panini/stereographic projection into the
-    image that mercator is projecting.
+1. Feathering the transition to mercator after 180°. It looks more natural—than
+   ray interpolation—to  “bake in” the panini/stereographic projection into the
+   image that mercator is projecting.
 2. Allowing custom magnification when approaching 360°.
 
 See the following for more details:
