@@ -173,6 +173,26 @@ vec4 rubix(vec3 ray) {
   return color;
 }
 
+vec2 complexMult(vec2 p1, vec2 p2) {
+  float a = p1.x;
+  float b = p1.y;
+  float c = p2.x;
+  float d = p2.y;
+  return vec2(a*c-b*d, a*d+b*c);
+}
+
+bool inside_thick(float x, float thick) {
+  float dx = thick/2.0;
+  return -dx < x && x < dx;
+}
+
+bool on_diag(vec2 uv, float angle, float r, float thick) {
+  vec2 p = complexMult(uv, vec2(cos(angle), sin(angle)));
+  float x = p.x;
+  float y = p.y;
+  return 0.0 < y && y < r && inside_thick(x, thick);
+}
+
 bool on_fov_overlay(vec2 uv) {
   // track
   float h = 0.5;
@@ -198,8 +218,14 @@ bool on_fov_overlay(vec2 uv) {
   // draw fov
   float angle = acos(dot(vec2(0,1), normalize(uv-knob)));
   float dist = distance(uv, knob);
-  if (angle < radians(fov)/2.0 &&  fovR - thick*8.0 < dist && dist < fovR) {
+  if (angle < radians(fov)/2.0 && inside_thick(dist-fovR*0.5,thick*3.0)) {
     return true;
+  }
+
+  // fov lines
+  if (on_diag(uv-knob, -radians(fov)/2.0, fovR, thick*2.0) ||
+      on_diag(uv-knob, radians(fov)/2.0, fovR, thick*2.0)) {
+    // return true;
   }
 
   // draw track
