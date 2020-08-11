@@ -99,6 +99,19 @@ Overview:
 5. Forward projection to plane using mercator.
 6. Scale such that the desired fov range touches screen bounds.
 
+### Why Mobius?
+
+A “Mobius” factor is used to push the pixels on the sphere *toward* or *away*
+from the center of the screen.  The scaling is done on a projected plane, then
+projected back to the sphere.  The spherical image is now warped by the
+projection.  Why?  Two reasons:
+
+1. Feathering the transition to mercator after 180°.
+  - It looks more natural (than ray interpolation) to  “bake in”
+    the panini/stereographic projection into the
+    image that mercator is projecting.
+2. Allowing custom magnification when approaching 360°.
+
 ## Outstanding Issues
 
 - fog is non-uniform across cubefaces
