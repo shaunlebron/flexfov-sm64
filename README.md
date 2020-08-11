@@ -112,6 +112,17 @@ projection.  Why?  Two reasons:
     image that mercator is projecting.
 2. Allowing custom magnification when approaching 360°.
 
+See the following for more details:
+
+- Spherical video editing with Möbius transformations
+  - [video](https://youtu.be/oVwmF_vrZh0)
+  - [blog](https://web.archive.org/web/20190627155016/http://elevr.com/spherical-video-editing-effects-with-mobius-transformations/)
+- [The Mercator Redemption](http://archive.bridgesmathart.org/2013/bridges2013-217.pdf)
+
+_Thanks to Jai for finding and sharing this transformation method. And thanks
+to Richard for asking if cropping a panini-zoomed mercator would be similar to
+panini alone, leading to our use of it to feather the transition._
+
 ## Outstanding Issues
 
 - fog is non-uniform across cubefaces
