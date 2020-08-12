@@ -105,6 +105,10 @@ void flexfov_update_input(void) {
       controlsOn = TRUE;
       s32 mode = set_cam_angle(0);
       set_cam_angle(mode == 1 ? 2 : 1);
+
+      if (fov == fovOffBound) {
+        fov += 0.1f;
+      }
     }
     return;
   }
