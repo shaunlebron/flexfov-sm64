@@ -1,7 +1,7 @@
 # mute
-#/src/pc/pc_main.c
-#- audio_api->play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
-#+ //audio_api->play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
+/src/pc/pc_main.c
+- audio_api->play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
++ //audio_api->play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
 
 # skip to level select
 /levels/entry.c

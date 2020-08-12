@@ -17,6 +17,8 @@ popd
 # patch other files
 awk -v root="$repo" -f patch.awk patch.diff | ed
 
-# dev patch
-#awk -v root="$repo" -f patch.awk scratch/patchdev.diff | ed
+# extra patch
+if [ ! -z "$1" ]; then
+  awk -v root="$repo" -f patch.awk "$1" | ed
+fi
 
