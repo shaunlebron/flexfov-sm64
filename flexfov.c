@@ -79,6 +79,7 @@ static u8 heldB = 0;
 
 // stick state
 static u8 waitingForCenter = FALSE;
+static u8 waitingForDecenter = FALSE;
 
 static const float fovOffBound = 90.0f;
 
@@ -93,12 +94,7 @@ void flexfov_update_input(void) {
   u8 a = (gPlayer1Controller->buttonDown & A_BUTTON) > 0;
   u8 b = (gPlayer1Controller->buttonDown & B_BUTTON) > 0;
 
-  if (!z) {
-    if (zooming) {
-      zooming = FALSE;
-      play_sound(SOUND_MENU_HAND_DISAPPEAR, gDefaultSoundArgs);
-    }
-  }
+  if (!z) zooming = FALSE;
   if (!r) controlsOn = FALSE;
 
   // Hold R for 5 frames to enable flex fov controls
@@ -126,13 +122,19 @@ void flexfov_update_input(void) {
   }
   if (z) {
     if (!zooming) {
-      play_sound(SOUND_MENU_HAND_APPEAR, gDefaultSoundArgs);
+      if (getMobiusZoom() == 0.0f) {
+        play_sound(SOUND_MENU_PINCH_MARIO_FACE, gDefaultSoundArgs);
+        waitingForDecenter = FALSE;
+      } else {
+        play_sound(SOUND_MENU_LET_GO_MARIO_FACE, gDefaultSoundArgs);
+        waitingForDecenter = TRUE;
+      }
+    }
+    if (waitingForDecenter && stickX != 0.0f) {
+      waitingForDecenter = FALSE;
+      play_sound(SOUND_MENU_PINCH_MARIO_FACE, gDefaultSoundArgs);
     }
     zooming = TRUE;
-    // Seesaw the mobius zoom with thumbstick left/right
-    if (mobiusZoom != stickX) {
-      //play_sound(SOUND_MENU_PINCH_MARIO_FACE, gDefaultSoundArgs);
-    }
     mobiusZoom = stickX;
     manualMobiusZoom = TRUE;
     waitingForCenter = TRUE;
