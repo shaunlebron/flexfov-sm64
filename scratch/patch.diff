@@ -10,3 +10,9 @@
 
 - EXECUTE(/*seg*/ 0x14, /*script*/ _introSegmentRomStart, /*scriptEnd*/ _introSegmentRomEnd, /*entry*/ level_intro_entry_1),
 + EXECUTE(/*seg*/ 0x14, /*script*/ _introSegmentRomStart, /*scriptEnd*/ _introSegmentRomEnd, /*entry*/ level_main_menu_entry_1),
+
+# respawn when falling off stage
+/src/game/interaction.c
+@ void check_death_barrier
+  if (m->pos[1] < m->floorHeight + 2048.0f) {
++ init_mario(); return;
