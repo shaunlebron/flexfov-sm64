@@ -33,15 +33,17 @@ enum FLEXFOV_CUBE_SIDE {
   FLEXFOV_CUBE_DOWN
 };
 
-
-u8 flexfov_is_on(void) {
+u8 can_be_on(void) {
   extern struct Object *gMarioObject;
   extern struct MarioState *gMarioState;
   extern struct Area *gCurrentArea;
   u8 marioOnScreen = gMarioObject != NULL;
   u8 marioInCannon = marioOnScreen && gCurrentArea != NULL && gCurrentArea->camera != NULL && gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON;
-  u8 on = flexFovOn && marioOnScreen && !marioInCannon && gMarioState->action != ACT_CREDITS_CUTSCENE;
-  return on;
+  return marioOnScreen && !marioInCannon && gMarioState->action != ACT_CREDITS_CUTSCENE;
+}
+
+u8 flexfov_is_on(void) {
+  return flexFovOn && can_be_on();
 }
 
 // shader state
@@ -81,13 +83,22 @@ static u8 waitingForCenter = FALSE;
 static const float fovOffBound = 90.0f;
 
 void flexfov_update_input(void) {
+  if (!can_be_on()) {
+    return;
+  }
+
   // get button states
   u8 r = (gPlayer1Controller->buttonDown & R_TRIG) > 0;
   u8 z = (gPlayer1Controller->buttonDown & Z_TRIG) > 0;
   u8 a = (gPlayer1Controller->buttonDown & A_BUTTON) > 0;
   u8 b = (gPlayer1Controller->buttonDown & B_BUTTON) > 0;
 
-  if (!z) zooming = FALSE;
+  if (!z) {
+    if (zooming) {
+      zooming = FALSE;
+      play_sound(SOUND_MENU_HAND_DISAPPEAR, gDefaultSoundArgs);
+    }
+  }
   if (!r) controlsOn = FALSE;
 
   // Hold R for 5 frames to enable flex fov controls
@@ -114,8 +125,14 @@ void flexfov_update_input(void) {
     waitingForCenter = FALSE;
   }
   if (z) {
+    if (!zooming) {
+      play_sound(SOUND_MENU_HAND_APPEAR, gDefaultSoundArgs);
+    }
     zooming = TRUE;
     // Seesaw the mobius zoom with thumbstick left/right
+    if (mobiusZoom != stickX) {
+      //play_sound(SOUND_MENU_PINCH_MARIO_FACE, gDefaultSoundArgs);
+    }
     mobiusZoom = stickX;
     manualMobiusZoom = TRUE;
     waitingForCenter = TRUE;
