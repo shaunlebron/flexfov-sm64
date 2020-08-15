@@ -125,6 +125,7 @@ panini alone, leading to our use of it to feather the transition._
 ## Outstanding Issues
 
 - window in portrait mode clips cubefaces
+- mirror wall is lit inconsistenty across cubefaces
 
 ## See Also
 
