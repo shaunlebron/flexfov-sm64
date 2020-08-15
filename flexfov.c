@@ -384,13 +384,16 @@ void flexfov_set_light_direction(Light_t *light) {
   light->dir[2] = z;
 }
 
-void flexfov_set_fog_scale(float m[4][4], float p[4][4], float v[3], float *z, float *w) {
+static float near, far;
+void flexfov_set_fog_planes(struct GraphNodePerspective *node) {
+  if (!flexfov_is_on()) return;
+  near = node->near;
+  far = node->far;
+}
+
+void flexfov_set_fog_scale(float m[4][4], float v[3], float *z, float *w) {
   // Fog is scaled based on z-distance to the screen’s near plane.
   // For consistency across cubefaces, we scale it based on actual distance to the camera.
-
-  // m = modelview matrix
-  // p = projection matrix
-  // v = vertex
 
   if (!flexfov_is_on()) return;
 
@@ -402,15 +405,16 @@ void flexfov_set_fog_scale(float m[4][4], float p[4][4], float v[3], float *z, f
 
   // Get the non-linear normalization of this distance (z/w)
   // by passing the point (0,0,-dist) through the projection matrix.
-  float u[3] = {0.0f, 0.0f, -dist};
-  float x1 = u[0] * p[0][0] + u[1] * p[1][0] + u[2] * p[2][0] + p[3][0]; // zero (unused)
-  float y1 = u[0] * p[0][1] + u[1] * p[1][1] + u[2] * p[2][1] + p[3][1]; // zero (unused)
-  float z1 = u[0] * p[0][2] + u[1] * p[1][2] + u[2] * p[2][2] + p[3][2];
-  float w1 = u[0] * p[0][3] + u[1] * p[1][3] + u[2] * p[2][3] + p[3][3];
-
-  // update the homogenous z/w for correcting fog_z
-  *z = z1;
-  *w = w1;
+  //
+  //   float u[3] = {0.0f, 0.0f, dist};
+  //   x = u[0] * p[0][0] + u[1] * p[1][0] + u[2] * p[2][0] + p[3][0];
+  //   y = u[0] * p[0][1] + u[1] * p[1][1] + u[2] * p[2][1] + p[3][1];
+  //   z = u[0] * p[0][2] + u[1] * p[1][2] + u[2] * p[2][2] + p[3][2];
+  //   w = u[0] * p[0][3] + u[1] * p[1][3] + u[2] * p[2][3] + p[3][3];
+  //
+  //   This simplifies to the following:
+  *z = (-dist*(near+far) + 2*near*far) / (near-far);
+  *w = dist;
 }
 
 //------------------------------------------------------------------------------

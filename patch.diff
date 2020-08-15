@@ -32,6 +32,11 @@
 @ static void geo_process_perspective
 + if (flexfov_is_on() && flexFovSky) return;
 
+# extend the near clipping plane to prevent obtrusive holes in the image
+# (but remember where the original near plane is to calculate fog correctly)
+- guPerspective(mtx, &perspNorm, node->fov, aspect, node->near, node->far, 1.0f);
++ guPerspective(mtx, &perspNorm, node->fov, aspect, flexfov_is_on() ? 1 : node->near, node->far, 1.0f); flexfov_set_fog_planes(node);
+
 @ static void geo_process_camera
 + if (!flexfov_is_on())
   gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(rollMtx), G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH);
@@ -73,7 +78,7 @@
 + Light_t l=rsp.current_lights[i]; flexfov_set_light_direction(&l); calculate_normal_dir(&l, rsp.current_lights_coeffs[i]);
 
   if (rsp.geometry_mode & G_FOG) {
-+ flexfov_set_fog_scale(rsp.modelview_matrix_stack[rsp.modelview_matrix_stack_size-1], rsp.P_matrix, v->ob, &z, &w);
++ flexfov_set_fog_scale(rsp.modelview_matrix_stack[rsp.modelview_matrix_stack_size-1], v->ob, &z, &w);
 
 @ static void gfx_run_dl
   uint32_t opcode = cmd->words.w0 >> 24;
