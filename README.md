@@ -124,7 +124,6 @@ panini alone, leading to our use of it to feather the transition._
 
 ## Outstanding Issues
 
-- fog is non-uniform across cubefaces
 - window in portrait mode clips cubefaces
 
 ## See Also

@@ -2,14 +2,6 @@ presence
 
 UI:
   - make fov scrollbar non-linear
-  - show scrollbar if controlsOn and flexfov is off
-
-FOG:
-  - in `gfx_sp_vertex` fog_z is calculated after projection (z/w)
-      float winv = 1.0f / w;
-      float fog_z = z * winv * rsp.fog_mul + rsp.fog_offset;
-    - need to understand what the projection matrix really is doing with the w-component
-      http://www.songho.ca/opengl/gl_projectionmatrix.html
 
 PORTRAIT MODE broken
   - cubeside texture is drawn correctly

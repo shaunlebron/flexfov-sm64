@@ -72,6 +72,9 @@
 - calculate_normal_dir(&rsp.current_lights[i], rsp.current_lights_coeffs[i]);
 + Light_t l=rsp.current_lights[i]; flexfov_set_light_direction(&l); calculate_normal_dir(&l, rsp.current_lights_coeffs[i]);
 
+  if (rsp.geometry_mode & G_FOG) {
++ flexfov_set_fog_scale(rsp.modelview_matrix_stack[rsp.modelview_matrix_stack_size-1], rsp.P_matrix, v->ob, &z, &w);
+
 @ static void gfx_run_dl
   uint32_t opcode = cmd->words.w0 >> 24;
 + if (flexfov_is_on()) flexfov_run_prehook(cmd);

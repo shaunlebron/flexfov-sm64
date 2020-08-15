@@ -16,6 +16,7 @@ void flexfov_gfx_init(void);
 void flexfov_geo_process_root(struct GraphNodeRoot *root, Vp *b, Vp *c, s32 clearColor);
 void flexfov_resize_cubemap(void);
 void flexfov_set_light_direction(Light_t *light);
+void flexfov_set_fog_scale(float m[4][4], float p[4][4], float v[3], float *z, float *w);
 void flexfov_update_input(void);
 
 #endif // _FLEXFOV_H

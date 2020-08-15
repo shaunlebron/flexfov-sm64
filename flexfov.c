@@ -362,6 +362,9 @@ static void init_cubeside(u8 side) {
 }
 
 void flexfov_set_light_direction(Light_t *light) {
+  // Light is always constant relative to the camera angle.
+  // So we have to force the same light direction for all cubefaces.
+
   if (!flexfov_is_on()) return;
 
   s8 x0=light->dir[0], y0=light->dir[1], z0=light->dir[2];
@@ -379,6 +382,35 @@ void flexfov_set_light_direction(Light_t *light) {
   light->dir[0] = x;
   light->dir[1] = y;
   light->dir[2] = z;
+}
+
+void flexfov_set_fog_scale(float m[4][4], float p[4][4], float v[3], float *z, float *w) {
+  // Fog is scaled based on z-distance to the screen’s near plane.
+  // For consistency across cubefaces, we scale it based on actual distance to the camera.
+
+  // m = modelview matrix
+  // p = projection matrix
+  // v = vertex
+
+  if (!flexfov_is_on()) return;
+
+  // get distance to the camera
+  float dx = v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0] + m[3][0];
+  float dy = v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1] + m[3][1];
+  float dz = v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] + m[3][2];
+  float dist = sqrtf(dx*dx + dy*dy + dz*dz);
+
+  // Get the non-linear normalization of this distance (z/w)
+  // by passing the point (0,0,-dist) through the projection matrix.
+  float u[3] = {0.0f, 0.0f, -dist};
+  float x1 = u[0] * p[0][0] + u[1] * p[1][0] + u[2] * p[2][0] + p[3][0]; // zero (unused)
+  float y1 = u[0] * p[0][1] + u[1] * p[1][1] + u[2] * p[2][1] + p[3][1]; // zero (unused)
+  float z1 = u[0] * p[0][2] + u[1] * p[1][2] + u[2] * p[2][2] + p[3][2];
+  float w1 = u[0] * p[0][3] + u[1] * p[1][3] + u[2] * p[2][3] + p[3][3];
+
+  // update the homogenous z/w for correcting fog_z
+  *z = z1;
+  *w = w1;
 }
 
 //------------------------------------------------------------------------------
