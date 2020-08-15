@@ -126,6 +126,8 @@ panini alone, leading to our use of it to feather the transition._
 
 - window in portrait mode clips cubefaces
 - mirror wall is lit inconsistenty across cubefaces
+- particles (snow, bubbles) are only rendered on front cube face
+- health meter flickers (bad depth test from extending near clipping plane?)
 
 ## See Also
 
