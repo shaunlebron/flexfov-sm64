@@ -124,6 +124,7 @@ panini alone, leading to our use of it to feather the transition._
 
 ## Outstanding Issues
 
+- billboards are torn at cubeface seams
 - window in portrait mode clips cubefaces
 - mirror wall is lit inconsistenty across cubefaces
 - particles (snow, bubbles) are only rendered on front cube face
