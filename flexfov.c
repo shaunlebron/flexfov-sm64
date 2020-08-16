@@ -34,12 +34,25 @@ enum FLEXFOV_CUBE_SIDE {
 };
 
 u8 can_be_on(void) {
+  // mario should be in the scene
   extern struct Object *gMarioObject;
-  extern struct MarioState *gMarioState;
-  extern struct Area *gCurrentArea;
   u8 marioOnScreen = gMarioObject != NULL;
-  u8 marioInCannon = marioOnScreen && gCurrentArea != NULL && gCurrentArea->camera != NULL && gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON;
-  return marioOnScreen && !marioInCannon && gMarioState->action != ACT_CREDITS_CUTSCENE;
+  if (!marioOnScreen) return FALSE;
+
+  // mario should not be in the cannon
+  extern struct Area *gCurrentArea;
+  u8 marioInCannon = gCurrentArea != NULL && gCurrentArea->camera != NULL && gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON;
+  if (marioInCannon) return FALSE;
+
+  // turn off for these cutscenes
+  extern struct MarioState *gMarioState;
+  u32 action = gMarioState ? gMarioState->action : 0;
+  u8 ignoreCutscene =
+    action == ACT_CREDITS_CUTSCENE || // not supporting shifting viewports
+    action == ACT_END_PEACH_CUTSCENE; // not supporting the letterboxed viewports
+  if (ignoreCutscene) return FALSE;
+
+  return TRUE;
 }
 
 u8 flexfov_is_on(void) {
