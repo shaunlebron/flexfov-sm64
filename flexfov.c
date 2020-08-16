@@ -229,13 +229,23 @@ void flexfov_set_cam(Vec4f *m) {
     VSET(B,-U0);
     VSET(U, B0);
   }
+}
 
-  // for billboards
-  const f32 PI = 32768.0f; // in s16 angle units
-  flexFovRoll = atan2s(R(1), sqrtf(R(0)*R(0) + R(2)*R(2))) - PI / 2.0f;
-  if (flexFovRoll == 0 && U(1) < 0) { // upside-down case when atan2 should return 180°
-    flexFovRoll = -PI;
-  }
+void flexfov_mtxf_billboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
+  // Consistently render billboards across cubefaces by keeping the
+  // billboard upright, and rotating it on its y-axis to face the camera.
+  // (Normally they are just rendered parallel to the camera plane.)
+  Mat4 mtxf;
+  mtxf_translate(mtxf, pos);
+
+  Vec3f v = { pos[0] - cam[0], 0.0f, pos[2] - cam[2] };
+  vec3f_normalize(v);
+  mtxf[2][0] = v[0];
+  mtxf[2][2] = v[2];
+  mtxf[0][0] = -v[2];
+  mtxf[0][2] = v[0];
+
+  mtxf_mul(dest, mtxf, src);
 }
 
 //------------------------------------------------------------------------------

@@ -44,10 +44,6 @@
   mtxf_mul(gMatStack[gMatStackIndex + 1], cameraTransform, gMatStack[gMatStackIndex]);
 + if (flexfov_is_on()) flexfov_set_cam(gMatStack[gMatStackIndex + 1]);
 
-@ static void geo_process_billboard
-- gCurGraphNodeCamera->roll);
-+ flexfov_is_on() ? flexFovRoll : gCurGraphNodeCamera->roll);
-
 @ static void geo_process_background
 + if (flexfov_is_on() && !flexFovSky) return;
 
@@ -56,8 +52,8 @@
   geo = node->sharedChild;
 
 @ static void geo_process_object
-- node->header.gfx.pos, gCurGraphNodeCamera->roll);
-+ node->header.gfx.pos, flexfov_is_on() ? flexFovRoll : gCurGraphNodeCamera->roll);
++ if (flexfov_is_on()) flexfov_mtxf_billboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->pos); else
+  mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
 
 /src/pc/gfx/gfx_opengl.c
 - #include <GL/glew.h>
