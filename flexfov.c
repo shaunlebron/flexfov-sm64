@@ -84,6 +84,7 @@ float getMobiusZoom(void) {
 
 static u8 controlsOn = FALSE;
 static u8 zooming = FALSE;
+static float pixelSize;
 
 // button states
 static s16 rCount = 0;
@@ -454,6 +455,7 @@ GLint quadFov;
 GLint quadMobiusZoom;
 GLint quadControlsOn;
 GLint quadZooming;
+GLint quadPixelSize;
 
 // Z depths:
 //  * sky = -0.33
@@ -548,6 +550,7 @@ static void create_quad(void) {
   quadMobiusZoom = glGetUniformLocation(quadProg, "mobiusZoom");
   quadControlsOn = glGetUniformLocation(quadProg, "controlsOn");
   quadZooming = glGetUniformLocation(quadProg, "zooming");
+  quadPixelSize = glGetUniformLocation(quadProg, "pixelSize");
 }
 
 // set aspect-normalized uv
@@ -564,6 +567,7 @@ static void update_aspect(u32 w, u32 h) {
     u = aspect/defaultAspect;
     v = 1.0f/defaultAspect;
   }
+  pixelSize = u/w/2.0f;
 
   // update quadVerts with aspect-normalized uv
   u8 i;
@@ -600,6 +604,7 @@ static void render_quad(void) {
   glUniform1f(quadMobiusZoom, getMobiusZoom());
   glUniform1i(quadControlsOn, controlsOn);
   glUniform1i(quadZooming, zooming);
+  glUniform1f(quadPixelSize, pixelSize);
 
   glEnableVertexAttribArray(quadAttrXY); glVertexAttribPointer(quadAttrXY, 2, GL_FLOAT, GL_FALSE, quadStride*sizeof(float), NULL);
   glEnableVertexAttribArray(quadAttrUV); glVertexAttribPointer(quadAttrUV, 2, GL_FLOAT, GL_FALSE, quadStride*sizeof(float), (void*)(2*sizeof(float)));

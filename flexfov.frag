@@ -24,6 +24,8 @@ varying vec2 vUV;
 //  *--------|---------------------------|--------*  v=-3/4
 //            <------- desired fov ----->
 
+uniform float pixelSize;
+
 // Environment map
 uniform samplerCube cubeTexture;
 
@@ -574,14 +576,43 @@ vec3 cubenet(vec2 uv) {
 // Main
 //------------------------------------------------------------------------------
 
-void main(void)
-{
-  vec2 uv = vUV;
+vec4 uv_color(vec2 uv) {
   vec3 ray;
   if (useCube)           { ray = cubenet(uv); }
   //else if (fov <= 180.0) { ray = flex(uv); }
   else if (fov < 360.0)  { ray = mercator(uv); }
   else if (fov == 360.0) { ray = equirect(uv); }
-  gl_FragColor = cubecolor(ray);
+  return cubecolor(ray);
+}
+
+vec4 uv_color_ss(vec2 uv) {
+  float e = pixelSize;
+
+  vec2 l = uv + vec2(0,e);
+  vec2 r = uv + vec2(0,-e);
+  vec2 u = uv + vec2(e,0);
+  vec2 d = uv + vec2(-e,0);
+
+  vec2 tl = uv + vec2(-e,e);
+  vec2 tr = uv + vec2(e,e);
+  vec2 bl = uv + vec2(-e,-e);
+  vec2 br = uv + vec2(e,-e);
+
+  return (
+    uv_color(uv) +
+    uv_color(l) +
+    uv_color(r) +
+    uv_color(u) +
+    uv_color(d) +
+    uv_color(tl) +
+    uv_color(tr) +
+    uv_color(bl) +
+    uv_color(br)
+  ) / 9.0;
+}
+
+void main(void)
+{
+  gl_FragColor = uv_color_ss(vUV);
 }
 
