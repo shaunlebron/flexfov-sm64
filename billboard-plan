@@ -1,0 +1,63 @@
+currently:
+  geo_process_object(w/flag GRAPH_RENDER_BILLBOARD) (billboard-only objects: trees, coins)          -> cylboards
+  geo_process_billboard                             (billboards inside objects: bob-ombs, chukyahs) -> billboard
+
+
+
+mtxf_billboard: quads always parallel to the rendering plane
+  x-axis camera right
+  y-axis camera up
+  z-axis camera forward
+
+mtxf_cylboard (turnstile): billboards with
+  x-axis (y cross z)
+  y-axis world up
+  z-axis (object - camera)
+
+mtxf_sphereboards (selfie-stick): billboards with
+  x-axis (y cross z)
+  y-axis camera up
+  z-axis (object - camera)
+
+
+
+  coins:                 will tear at cube seams
+  bob-bombs, chuckyahs:  parts displaced (relative to origin of entity, rather than world?)
+
+  billboards tear at seams
+  
+  
+
+
+problem:
+  billboards are inconsistent across cube seams (tearing)
+  billboards distort toward rectilinear boundaries (when projected onto environment map sphere)
+
+solution:
+  create a functional sphereboard function to fix both problems
+    for BOTH pure billboards (coins) and billboard parts inside otherwise 3d objects (bob-ombs, chukyahs)
+
+
+
+how to diagnose sphereboard problems:
+  make knowns clear
+
+knowns:
+  position of an entity (coin, bob-omb) 
+  position of camera
+  matrix of billboard
+
+unknowns:
+  how matrix is used
+    is it multiplied by anything else?
+    can we trace it to the final vertices given to opengl?
+
+how to verify theory about what matrix should be doing?:
+  visualize the positions and matrix vectors
+
+
+how to target one object for diagnosis?:
+  isolate the outdoor castle billboards to a single tree
+    tracking mario’s position
+      rendering the billboard closest to him?
+    or using a counter to isolate by count
