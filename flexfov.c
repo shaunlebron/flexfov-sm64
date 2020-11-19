@@ -232,7 +232,45 @@ void flexfov_set_cam(Vec4f *m) {
   }
 }
 
-void flexfov_mtxf_billboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
+void flexfov_mtxf_sub_billboard(Mat4 dest, Mat4 src, Vec3f position, Vec3f cam) {
+    Vec3f relPos = {
+      src[0][0] * position[0] + src[1][0] * position[1] + src[2][0] * position[2] + src[3][0],
+      src[1][0] * position[0] + src[1][1] * position[1] + src[2][1] * position[2] + src[3][1],
+      src[2][0] * position[0] + src[1][2] * position[1] + src[2][2] * position[2] + src[3][2]
+    };
+
+    s16 a = (45.0f / 180.0f * 32768);
+    float c = coss(a), s = sins(a);
+
+    dest[0][0] = c;
+    dest[0][1] = 0;
+    dest[0][2] = s;
+    dest[0][3] = 0;
+
+    dest[1][0] = 0;
+    dest[1][1] = 1;
+    dest[1][2] = 0;
+    dest[1][3] = 0;
+
+    dest[2][0] = -s;
+    dest[2][1] = 0;
+    dest[2][2] = c;
+    dest[2][3] = 0;
+
+    // src transforms world -> camera
+    // inv(src) would transform camera -> world
+    //
+    // CAM POSITION OF THE BILLBOARD:
+    //
+    // how to get world position of the billboard?
+    //
+    dest[3][0] = relPos[0];
+    dest[3][1] = relPos[1];
+    dest[3][2] = relPos[2];
+    dest[3][3] = 1;
+}
+
+void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   // Consistently render billboards across cubefaces by keeping the
   // billboard upright, and rotating it on its y-axis to face the camera.
   // (Normally they are just rendered parallel to the camera plane.)

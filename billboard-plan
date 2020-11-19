@@ -2,6 +2,10 @@ currently:
   geo_process_object(w/flag GRAPH_RENDER_BILLBOARD) (billboard-only objects: trees, coins)          -> cylboards
   geo_process_billboard                             (billboards inside objects: bob-ombs, chukyahs) -> billboard
 
+objects:
+  parts (bob-ombs, scuttlebugs, chuckyas, skeeters)
+  wholes (trees, coins)
+
 
 
 mtxf_billboard: quads always parallel to the rendering plane

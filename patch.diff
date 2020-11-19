@@ -51,10 +51,6 @@
 + if (flexfov_is_on()) return TRUE;
   geo = node->sharedChild;
 
-@ static void geo_process_object
-+ if (flexfov_is_on()) flexfov_mtxf_billboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->pos); else
-  mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
-
 /src/pc/gfx/gfx_opengl.c
 - #include <GL/glew.h>
 + #include <OpenGL/gl3.h>
@@ -108,3 +104,35 @@
 -  OBJECT(/*model*/ MODEL_VCUTM_CHECKERBOARD_PLATFORM_SPAWNER,           /*pos*/ -1151, -2413, -6256, /*angle*/ 0, 270, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
 +  OBJECT(/*model*/ MODEL_NONE,                                          /*pos*/ -1151, -2413, -6256, /*angle*/ 0, 270, 0, /*behParam*/ 0x014B0000, /*beh*/ bhvCheckerboardElevatorGroup),
 
+/data/behavior_data.c
+  BC_B(0x21)
++ #define CYLBOARD() BC_B(0x38)
+
+@ const BehaviorScript bhvTree[] = {
+- BILLBOARD(),
++ CYLBOARD(),
+
+/src/engine/behavior_script.c
+@ static BhvCommandProc BehaviorCmdTable[] = {
+  bhv_cmd_spawn_water_droplet,
++ bhv_cmd_cylboard
+
++ static s32 bhv_cmd_cylboard(void) { gCurrentObject->header.gfx.node.flags |= GRAPH_RENDER_CYLBOARD; gCurBhvCommand++; return BHV_PROC_CONTINUE; }
+  static s32 bhv_cmd_billboard(void) {
+
+/src/engine/graph_node.h
+  #define GRAPH_RENDER_HAS_ANIMATION  (1 << 5)
++ #define GRAPH_RENDER_CYLBOARD (1 << 6)
+
+/src/game/rendering_graph_node.c
+@ static void geo_process_object
++ } else if (node->header.gfx.node.flags & GRAPH_RENDER_CYLBOARD) { if (flexfov_is_on()) flexfov_mtxf_cylboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->pos); else mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->roll);
+  } else if (node->header.gfx.node.flags & GRAPH_RENDER_BILLBOARD) {
+
+#+ if (flexfov_is_on()) flexfov_mtxf_billboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->pos); else
+#  mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
+
+/src/game/spawn_object.c
+@ void unload_object(struct Object *obj) {
+  obj->header.gfx.node.flags &= ~GRAPH_RENDER_BILLBOARD;
++ obj->header.gfx.node.flags &= ~GRAPH_RENDER_CYLBOARD;

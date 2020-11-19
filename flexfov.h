@@ -18,6 +18,6 @@ void flexfov_set_light_direction(Light_t *light);
 void flexfov_set_fog_scale(float m[4][4], float v[3], float *z, float *w);
 void flexfov_set_fog_planes(struct GraphNodePerspective *node);
 void flexfov_update_input(void);
-void flexfov_mtxf_billboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam);
+void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam);
 
 #endif // _FLEXFOV_H
