@@ -296,7 +296,30 @@ static void _mtxf_billboard(Mat4 dest, Mat4 mtx, Vec3f position, s16 angle) {
 }
 
 void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
-  return _mtxf_billboard(dest, src, pos, 0);
+  Mat4 mtxf;
+  mtxf_translate(mtxf, pos);
+
+  Vec3f forward = { pos[0] - cam[0], pos[1] - cam[1], pos[2] - cam[2] };
+  vec3f_normalize(forward);
+
+  Vec3f up = { 0, 1, 0 };
+
+  Vec3f left;
+  vec3f_cross(left, forward, up);
+
+  mtxf[0][0] = left[0];
+  mtxf[0][1] = left[1];
+  mtxf[0][2] = left[2];
+
+  mtxf[1][0] = up[0];
+  mtxf[1][1] = up[1];
+  mtxf[1][2] = up[2];
+
+  mtxf[2][0] = -forward[0];
+  mtxf[2][1] = -forward[1];
+  mtxf[2][2] = -forward[2];
+
+  mtxf_mul(dest, mtxf, src);
 }
 
 void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
