@@ -270,6 +270,35 @@ void flexfov_mtxf_sub_billboard(Mat4 dest, Mat4 src, Vec3f position, Vec3f cam) 
     dest[3][3] = 1;
 }
 
+static void _mtxf_billboard(Mat4 dest, Mat4 mtx, Vec3f position, s16 angle) {
+    dest[0][0] = coss(angle);
+    dest[0][1] = sins(angle);
+    dest[0][2] = 0;
+    dest[0][3] = 0;
+
+    dest[1][0] = -dest[0][1];
+    dest[1][1] = dest[0][0];
+    dest[1][2] = 0;
+    dest[1][3] = 0;
+
+    dest[2][0] = 0;
+    dest[2][1] = 0;
+    dest[2][2] = 1;
+    dest[2][3] = 0;
+
+    dest[3][0] =
+        mtx[0][0] * position[0] + mtx[1][0] * position[1] + mtx[2][0] * position[2] + mtx[3][0];
+    dest[3][1] =
+        mtx[0][1] * position[0] + mtx[1][1] * position[1] + mtx[2][1] * position[2] + mtx[3][1];
+    dest[3][2] =
+        mtx[0][2] * position[0] + mtx[1][2] * position[1] + mtx[2][2] * position[2] + mtx[3][2];
+    dest[3][3] = 1;
+}
+
+void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
+  return _mtxf_billboard(dest, src, pos, 0);
+}
+
 void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   // Consistently render billboards across cubefaces by keeping the
   // billboard upright, and rotating it on its y-axis to face the camera.

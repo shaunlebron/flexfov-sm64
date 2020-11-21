@@ -129,8 +129,8 @@
 + } else if (node->header.gfx.node.flags & GRAPH_RENDER_CYLBOARD) { if (flexfov_is_on()) flexfov_mtxf_cylboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->pos); else mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->roll);
   } else if (node->header.gfx.node.flags & GRAPH_RENDER_BILLBOARD) {
 
-#+ if (flexfov_is_on()) flexfov_mtxf_billboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->pos); else
-#  mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
++ if (flexfov_is_on()) flexfov_mtxf_sphereboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->pos); else
+  mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
 
 /src/game/spawn_object.c
 @ void unload_object(struct Object *obj) {
