@@ -194,7 +194,10 @@ void flexfov_update_input(void) {
 // Camera
 //------------------------------------------------------------------------------
 
+Vec4f sphereboard_up = { 0, 1, 0, 0 };
+
 void flexfov_set_cam(Vec4f *m) {
+#define SU(i) sphereboard_up[i]
 #define R0(i) pR[i]
 #define U0(i) pU[i]
 #define B0(i) pB[i]
@@ -208,6 +211,9 @@ void flexfov_set_cam(Vec4f *m) {
   VSET(R0,R);
   VSET(U0,U);
   VSET(B0,B);
+
+  // save current camera for sphereboard_up vector
+  VSET(SU, U);
 
   camPitch = asin(-pB[1]);
 
@@ -230,6 +236,7 @@ void flexfov_set_cam(Vec4f *m) {
     VSET(B,-U0);
     VSET(U, B0);
   }
+
 }
 
 void flexfov_mtxf_sub_billboard(Mat4 dest, Mat4 src, Vec3f position, Vec3f cam) {
@@ -272,16 +279,20 @@ void flexfov_mtxf_sub_billboard(Mat4 dest, Mat4 src, Vec3f position, Vec3f cam) 
 }
 
 void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
+
   Mat4 mtxf;
   mtxf_translate(mtxf, pos);
 
+  // billboards are always drawn to directly face the camera
   Vec3f forward = { pos[0] - cam[0], pos[1] - cam[1], pos[2] - cam[2] };
   vec3f_normalize(forward);
 
-  // FIXME: replace with front cubeface’s up vector?
-  // Billboards shrink in areas where cam-forward and world-up approach colinearity.
-  // We might force these cases to the camera’s periphery by using the front cubeface’s up vector.
-  Vec3f up = { 0, 1, 0 };
+  // billboards are always drawn with their up vector equal to the forward camera’s up vector.
+  Vec3f up = {
+    sphereboard_up[0],
+    sphereboard_up[1],
+    sphereboard_up[2]
+  };
 
   Vec3f left;
   vec3f_cross(left, forward, up);

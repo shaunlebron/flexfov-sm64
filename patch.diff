@@ -38,6 +38,7 @@
 + guPerspective(mtx, &perspNorm, node->fov, aspect, flexfov_is_on() ? 1 : node->near, node->far, 1.0f); flexfov_set_fog_planes(node);
 
 @ static void geo_process_camera
+# remove roll
 + if (!flexfov_is_on())
   gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(rollMtx), G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH);
 
