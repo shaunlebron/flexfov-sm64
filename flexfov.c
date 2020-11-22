@@ -194,10 +194,9 @@ void flexfov_update_input(void) {
 // Camera
 //------------------------------------------------------------------------------
 
-Vec4f sphereboard_up = { 0, 1, 0, 0 };
+Vec3f sphereboard_up = { 0, 1, 0 };
 
 void flexfov_set_cam(Vec4f *m) {
-#define SU(i) sphereboard_up[i]
 #define R0(i) pR[i]
 #define U0(i) pU[i]
 #define B0(i) pB[i]
@@ -213,7 +212,9 @@ void flexfov_set_cam(Vec4f *m) {
   VSET(B0,B);
 
   // save current camera for sphereboard_up vector
-  VSET(SU, U);
+  sphereboard_up[0] = U(0);
+  sphereboard_up[1] = U(1);
+  sphereboard_up[2] = U(2);
 
   camPitch = asin(-pB[1]);
 
