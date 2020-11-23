@@ -20,5 +20,6 @@ void flexfov_set_fog_planes(struct GraphNodePerspective *node);
 void flexfov_update_input(void);
 void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam);
 void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam);
+void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam);
 
 #endif // _FLEXFOV_H

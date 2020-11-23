@@ -2,18 +2,18 @@
 
 #include <stdio.h> // import printf
 
-#include "rendering_graph_node.h" // import geo_process_root
-#include "src/engine/math_util.h" // import atan2s
-#include "include/config.h" // import SCREEN_WIDTH, SCREEN_HEIGHT
-#include "src/game/camera.h" // import CAMERA_MODE_INSIDE_CANNON
-#include "src/game/game_init.h" // import gDisplayListHead, gPlayer1Controller
-#include "include/PR/gu.h" // import guScaleF
+#include "rendering_graph_node.h"   // import geo_process_root
+#include "src/engine/math_util.h"   // import atan2s
+#include "include/config.h"         // import SCREEN_WIDTH, SCREEN_HEIGHT
+#include "src/game/camera.h"        // import CAMERA_MODE_INSIDE_CANNON
+#include "src/game/game_init.h"     // import gDisplayListHead, gPlayer1Controller
+#include "include/PR/gu.h"          // import guScaleF
 #include "include/gfx_dimensions.h" // import GFX_DIMENSIONS_FROM_LEFT_EDGE
-#include "src/game/ingame_menu.h" // import create_dl_translation_matrix, MENU_MTX_PUSH
-#include "src/pc/gfx/gfx_pc.h" // import gfx_current_dimensions
-#include "src/audio/external.h" // import play_sound
-#include "include/audio_defines.h" // import SOUND_MENU_MESSAGE_DISAPPEAR, SOUND_MENU_MESSAGE_APPEAR
-#include "include/sm64.h" // import ACT_CREDITS_CUTSCENE
+#include "src/game/ingame_menu.h"   // import create_dl_translation_matrix, MENU_MTX_PUSH
+#include "src/pc/gfx/gfx_pc.h"      // import gfx_current_dimensions
+#include "src/audio/external.h"     // import play_sound
+#include "include/audio_defines.h"  // import SOUND_MENU_MESSAGE_DISAPPEAR, SOUND_MENU_MESSAGE_APPEAR
+#include "include/sm64.h"           // import ACT_CREDITS_CUTSCENE
 
 //------------------------------------------------------------------------------
 // State
@@ -277,6 +277,9 @@ void flexfov_mtxf_sub_billboard(Mat4 dest, Mat4 src, Vec3f position, Vec3f cam) 
     dest[3][1] = relPos[1];
     dest[3][2] = relPos[2];
     dest[3][3] = 1;
+}
+void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
+  mtxf_billboard(dest, src, pos, 0);
 }
 
 void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
