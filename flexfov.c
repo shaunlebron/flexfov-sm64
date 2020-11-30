@@ -240,63 +240,84 @@ void flexfov_set_cam(Vec4f *m) {
 
 }
 
-void flexfov_mtxf_sub_billboard(Mat4 dest, Mat4 src, Vec3f position, Vec3f cam) {
-    // ?
-    Vec3f relPos = {
-      src[0][0] * position[0] + src[1][0] * position[1] + src[2][0] * position[2] + src[3][0],
-      src[1][0] * position[0] + src[1][1] * position[1] + src[2][1] * position[2] + src[3][1],
-      src[2][0] * position[0] + src[1][2] * position[1] + src[2][2] * position[2] + src[3][2]
-    };
+extern s16 gMatStackIndex;
+extern Mat4 gMatStack[32];
 
-    s16 a = (45.0f / 180.0f * 32768);
-    float c = coss(a), s = sins(a);
-
-    dest[0][0] = c;
-    dest[0][1] = 0;
-    dest[0][2] = s;
-    dest[0][3] = 0;
-
-    dest[1][0] = 0;
-    dest[1][1] = 1;
-    dest[1][2] = 0;
-    dest[1][3] = 0;
-
-    dest[2][0] = -s;
-    dest[2][1] = 0;
-    dest[2][2] = c;
-    dest[2][3] = 0;
-
-    // src transforms world -> camera
-    // inv(src) would transform camera -> world
-    //
-    // CAM POSITION OF THE BILLBOARD:
-    //
-    // how to get world position of the billboard?
-    //
-    dest[3][0] = relPos[0];
-    dest[3][1] = relPos[1];
-    dest[3][2] = relPos[2];
-    dest[3][3] = 1;
+void log_matrix(Mat4 mat) {
+  for (int j=0; j<4; j++) {
+    printf("   (%.2f %.2f %.2f %.2f)\n", mat[j][0], mat[j][1], mat[j][2], mat[j][3]);
+  }
 }
+void log_camera() {
+  Vec3f cam;
+  vec3f_copy(cam, gCurGraphNodeCamera->pos);
+  printf("camera: (%.2f %.2f %.2f)\n", cam[0], cam[1], cam[2]);
+}
+void log_mario() {
+  extern struct Object *gMarioObject;
+  f32 x = gMarioObject->oPosX;
+  f32 y = gMarioObject->oPosY;
+  f32 z = gMarioObject->oPosZ;
+  printf("mario: (%.2f %.2f %.2f)\n", x,y,z);
+}
+
+void log_matstack(int i) {
+  for (; i>=0; i--) {
+    printf("gMatStack %d:\n", i);
+    log_matrix(gMatStack[i]);
+  }
+}
+
+void _mtxf_billboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
+  s16 a = (20.0f / 180.0f * 32768);
+  Mat4 mtx;
+  Vec3s angles = { 0, a, 0 };
+  Vec3f translate = {
+    src[0][0] * pos[0] + src[1][0] * pos[1] + src[2][0] * pos[2] + src[3][0],
+    src[0][1] * pos[0] + src[1][1] * pos[1] + src[2][1] * pos[2] + src[3][1],
+    src[0][2] * pos[0] + src[1][2] * pos[1] + src[2][2] * pos[2] + src[3][2],
+  };
+  mtxf_rotate_xyz_and_translate(mtx, translate, angles);
+  mtxf_copy(dest, mtx);
+}
+
+f32 dist_from_mario(Vec3f pos) {
+  extern struct Object *gMarioObject;
+  f32 dx = gMarioObject->oPosX - pos[0];
+  f32 dy = gMarioObject->oPosY - pos[1];
+  f32 dz = gMarioObject->oPosZ - pos[2];
+  return sqrtf(dx * dx + dy * dy + dz * dz);
+}
+
+
 void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
-  mtxf_billboard(dest, src, pos, 0);
-}
-
-void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
-
-  Mat4 mtxf;
+  Mat4 result,mtxf;
   mtxf_translate(mtxf, pos);
+  mtxf_mul(dest, mtxf, src);
+  vec3f_normalize(dest[0]);
+  vec3f_normalize(dest[1]);
+  vec3f_normalize(dest[2]);
+  
+  //mtxf_billboard(dest,src,pos,0);
+
+  Vec3f absPos;
+  vec3f_copy(absPos, gCurGraphNodeObject->pos);
+
+  if (flexFovSide == FLEXFOV_CUBE_FRONT && dist_from_mario(absPos) < 200) {
+    printf("src:\n"); log_matrix(src);
+    printf("result:\n"); log_matrix(result);
+    printf("dest:\n"); log_matrix(dest);
+    //log_matstack(gMatStackIndex-1);
+  }
+  return;
 
   // billboards are always drawn to directly face the camera
-  Vec3f forward = { pos[0] - cam[0], pos[1] - cam[1], pos[2] - cam[2] };
+  Vec3f forward = { absPos[0] - cam[0], absPos[1] - cam[1], absPos[2] - cam[2] };
   vec3f_normalize(forward);
 
   // billboards are always drawn with their up vector equal to the forward camera’s up vector.
-  Vec3f up = {
-    sphereboard_up[0],
-    sphereboard_up[1],
-    sphereboard_up[2]
-  };
+  Vec3f up;
+  vec3f_copy(up, sphereboard_up);
 
   Vec3f left;
   vec3f_cross(left, forward, up);
@@ -316,21 +337,73 @@ void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   mtxf_mul(dest, mtxf, src);
 }
 
+void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
+
+  Mat4 mtxf;
+  mtxf_translate(mtxf, pos);
+
+  // billboards are always drawn to directly face the camera
+  Vec3f forward = { pos[0] - cam[0], pos[1] - cam[1], pos[2] - cam[2] };
+  vec3f_normalize(forward);
+
+  // billboards are always drawn with their up vector equal to the forward camera’s up vector.
+  Vec3f up;
+  vec3f_copy(up, sphereboard_up);
+
+  Vec3f left;
+  vec3f_cross(left, forward, up);
+  vec3f_copy(mtxf[0], left);
+  vec3f_copy(mtxf[1], up);
+  vec3f_copy(mtxf[2], forward);
+
+  mtxf_mul(dest, mtxf, src);
+}
+
+
 void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
+
   // Consistently render billboards across cubefaces by keeping the
   // billboard upright, and rotating it on its y-axis to face the camera.
   // (Normally they are just rendered parallel to the camera plane.)
   Mat4 mtxf;
   mtxf_translate(mtxf, pos);
 
-  Vec3f v = { pos[0] - cam[0], 0.0f, pos[2] - cam[2] };
+  // camera->cylboard vector (on xz plane)
+  Vec3f v = {
+    pos[0] - cam[0],
+    0.0f,
+    pos[2] - cam[2]
+  };
   vec3f_normalize(v);
-  mtxf[2][0] = v[0];
-  mtxf[2][2] = v[2];
-  mtxf[0][0] = -v[2];
-  mtxf[0][2] = v[0];
+  f32 dx = v[0];
+  f32 dz = v[2];
+
+  mtxf[0][0] = 1;//-dz;
+  mtxf[0][1] = 0;
+  mtxf[0][2] = 0;//dx;
+
+  mtxf[1][0] = 0;
+  mtxf[1][1] = 1;
+  mtxf[1][2] = 0;
+
+  mtxf[2][0] = 0;//dx;
+  mtxf[2][1] = 0;
+  mtxf[2][2] = 1;//dz;
 
   mtxf_mul(dest, mtxf, src);
+  //mtxf_billboard(dest,src,pos,0);
+
+  if (flexFovSide == FLEXFOV_CUBE_FRONT) {
+    if (dist_from_mario(pos) < 100) {
+      printf("-----\n");
+      log_mario();
+      log_camera();
+      printf("tree: (%.2f %.2f %.2f)\n", pos[0],pos[1],pos[2]);
+      printf("src:\n"); log_matrix(src);
+      printf("mtxf:\n"); log_matrix(mtxf);
+      printf("dest:\n"); log_matrix(dest);
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
