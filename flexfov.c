@@ -291,13 +291,10 @@ f32 dist_from_mario(Vec3f pos) {
 
 
 void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
-  Mat4 result,mtxf;
-  mtxf_translate(mtxf, pos);
-  mtxf_mul(dest, mtxf, src);
+  mtxf_copy(dest, src);
   vec3f_normalize(dest[0]);
   vec3f_normalize(dest[1]);
   vec3f_normalize(dest[2]);
-  
   //mtxf_billboard(dest,src,pos,0);
 
   Vec3f absPos;
@@ -305,9 +302,7 @@ void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
 
   if (flexFovSide == FLEXFOV_CUBE_FRONT && dist_from_mario(absPos) < 200) {
     printf("src:\n"); log_matrix(src);
-    printf("result:\n"); log_matrix(result);
     printf("dest:\n"); log_matrix(dest);
-    //log_matstack(gMatStackIndex-1);
   }
   return;
 
@@ -322,6 +317,7 @@ void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   Vec3f left;
   vec3f_cross(left, forward, up);
 
+  Mat4 mtxf;
   mtxf[0][0] = left[0];
   mtxf[0][1] = left[1];
   mtxf[0][2] = left[2];
@@ -368,27 +364,27 @@ void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   Mat4 mtxf;
   mtxf_translate(mtxf, pos);
 
-  // camera->cylboard vector (on xz plane)
+  // cylboard->camera vector (on xz plane)
   Vec3f v = {
-    pos[0] - cam[0],
+    cam[0] - pos[0],
     0.0f,
-    pos[2] - cam[2]
+    cam[2] - pos[2]
   };
   vec3f_normalize(v);
   f32 dx = v[0];
   f32 dz = v[2];
 
-  mtxf[0][0] = 1;//-dz;
+  mtxf[0][0] = dz;
   mtxf[0][1] = 0;
-  mtxf[0][2] = 0;//dx;
+  mtxf[0][2] = -dx;
 
   mtxf[1][0] = 0;
   mtxf[1][1] = 1;
   mtxf[1][2] = 0;
 
-  mtxf[2][0] = 0;//dx;
+  mtxf[2][0] = dx;
   mtxf[2][1] = 0;
-  mtxf[2][2] = 1;//dz;
+  mtxf[2][2] = dz;
 
   mtxf_mul(dest, mtxf, src);
   //mtxf_billboard(dest,src,pos,0);

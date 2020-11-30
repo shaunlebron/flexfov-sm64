@@ -1,3 +1,9 @@
+when looking at fixed tree:
+  x+ right
+  y+ up
+  z+ toward camera
+
+
 currently:
   geo_process_object(w/flag GRAPH_RENDER_BILLBOARD) (billboard-only objects: trees, coins)          -> cylboards
   geo_process_billboard                             (billboards inside objects: bob-ombs, chukyahs) -> billboard
