@@ -1,3 +1,20 @@
+get absolute position of the billboard inside the entity
+  multiplying the billboard frame (relative)
+    by the entity root frame (absolute)
+
+compute the billboard absolute orientation (cam - absPos)
+
+convert this orientation to be relative to the billboard frame
+  multiply by the inverse of the entity frame => orientation relative to entity
+    then multiply by the inverse of the billboard frame => orientation relative to billboard
+
+
+entity frame -> gCurGraphNodeRoot
+...hopefully no intermediate frames...
+billboard frame -> Mat4 dest (passed to mtxf_billboard)
+
+
+
 when looking at fixed tree:
   x+ right
   y+ up

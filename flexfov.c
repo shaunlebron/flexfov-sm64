@@ -194,8 +194,6 @@ void flexfov_update_input(void) {
 // Camera
 //------------------------------------------------------------------------------
 
-Vec3f sphereboard_up = { 0, 1, 0 };
-
 void flexfov_set_cam(Vec4f *m) {
 #define R0(i) pR[i]
 #define U0(i) pU[i]
@@ -210,11 +208,6 @@ void flexfov_set_cam(Vec4f *m) {
   VSET(R0,R);
   VSET(U0,U);
   VSET(B0,B);
-
-  // save current camera for sphereboard_up vector
-  sphereboard_up[0] = U(0);
-  sphereboard_up[1] = U(1);
-  sphereboard_up[2] = U(2);
 
   camPitch = asin(-pB[1]);
 
@@ -297,6 +290,13 @@ void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   vec3f_normalize(dest[2]);
   //mtxf_billboard(dest,src,pos,0);
 
+  Mat4 mtxf;
+  s16 a = (90.0f / 180.0f * 32768);
+  Vec3f translate = { 0, 0, 0 };
+  Vec3s angles = { 0, a, 0 };
+  mtxf_rotate_xyz_and_translate(mtxf, translate, angles);
+  mtxf_mul(dest, mtxf, dest);
+
   Vec3f absPos;
   vec3f_copy(absPos, gCurGraphNodeObject->pos);
 
@@ -311,13 +311,10 @@ void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   vec3f_normalize(forward);
 
   // billboards are always drawn with their up vector equal to the forward camera’s up vector.
-  Vec3f up;
-  vec3f_copy(up, sphereboard_up);
-
+  Vec3f up = { 0, 1, 0 };
   Vec3f left;
   vec3f_cross(left, forward, up);
 
-  Mat4 mtxf;
   mtxf[0][0] = left[0];
   mtxf[0][1] = left[1];
   mtxf[0][2] = left[2];
@@ -339,16 +336,20 @@ void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   mtxf_translate(mtxf, pos);
 
   // billboards are always drawn to directly face the camera
-  Vec3f forward = { pos[0] - cam[0], pos[1] - cam[1], pos[2] - cam[2] };
+  Vec3f forward = {
+    cam[0] - pos[0],
+    cam[1] - pos[1],
+    cam[2] - pos[2]
+  };
   vec3f_normalize(forward);
 
-  // billboards are always drawn with their up vector equal to the forward camera’s up vector.
-  Vec3f up;
-  vec3f_copy(up, sphereboard_up);
+  Vec3f up = { 0, 1, 0 };
+  Vec3f right;
+  vec3f_cross(right, up, forward); // left-hand rule?
+  vec3f_normalize(right);
+  vec3f_cross(up, forward, right);
 
-  Vec3f left;
-  vec3f_cross(left, forward, up);
-  vec3f_copy(mtxf[0], left);
+  vec3f_copy(mtxf[0], right);
   vec3f_copy(mtxf[1], up);
   vec3f_copy(mtxf[2], forward);
 
@@ -365,11 +366,7 @@ void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   mtxf_translate(mtxf, pos);
 
   // cylboard->camera vector (on xz plane)
-  Vec3f v = {
-    cam[0] - pos[0],
-    0.0f,
-    cam[2] - pos[2]
-  };
+  Vec3f v = { cam[0] - pos[0], 0.0f, cam[2] - pos[2] };
   vec3f_normalize(v);
   f32 dx = v[0];
   f32 dz = v[2];
@@ -377,17 +374,22 @@ void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   mtxf[0][0] = dz;
   mtxf[0][1] = 0;
   mtxf[0][2] = -dx;
-
   mtxf[1][0] = 0;
   mtxf[1][1] = 1;
   mtxf[1][2] = 0;
-
   mtxf[2][0] = dx;
   mtxf[2][1] = 0;
   mtxf[2][2] = dz;
 
   mtxf_mul(dest, mtxf, src);
-  //mtxf_billboard(dest,src,pos,0);
+
+  /*
+  s16 a = (90.0f / 180.0f * 32768);
+  Vec3f translate = { 0, 0, 0 };
+  Vec3s angles = { 0, a, 0 };
+  mtxf_rotate_xyz_and_translate(mtxf, translate, angles);
+  mtxf_mul(dest, mtxf, dest); // <-- switch order?
+  */
 
   if (flexFovSide == FLEXFOV_CUBE_FRONT) {
     if (dist_from_mario(pos) < 100) {
