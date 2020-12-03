@@ -298,33 +298,12 @@ void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
 
 // SPHERE BILLBOARDS
 // e.g. coins, flames, bubbles, clouds
-void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
+void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos) {
   Mat4 mtxf;
   mtxf_translate(mtxf, pos);
+  mtxf_mul(dest, mtxf, src);
 
   // sphereboard->camera vector
-  Vec3f forward = { cam[0] - pos[0], cam[1] - pos[1], cam[2] - pos[2] };
-  vec3f_normalize(forward);
-
-  Vec3f up = { 0, 1, 0 };
-  Vec3f right;
-  vec3f_cross(right, up, forward); // left-hand rule?
-  vec3f_normalize(right);
-  vec3f_cross(up, forward, right);
-
-  vec3f_copy(mtxf[0], right);
-  vec3f_copy(mtxf[1], up);
-  vec3f_copy(mtxf[2], forward);
-
-  mtxf_mul(dest, mtxf, src);
-}
-
-void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
-  mtxf_copy(dest, src);
-  vec3f_normalize(dest[0]);
-  vec3f_normalize(dest[1]);
-  vec3f_normalize(dest[2]);
-
   Vec3f screenPos;
   vec3f_copy(screenPos, dest[3]);
 
