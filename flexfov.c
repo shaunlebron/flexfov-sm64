@@ -299,28 +299,25 @@ void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
 // SPHERE BILLBOARDS
 // e.g. coins, flames, bubbles, clouds
 void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos) {
+  // set screen space position of billboard
   Mat4 mtxf;
   mtxf_translate(mtxf, pos);
   mtxf_mul(dest, mtxf, src);
 
-  // sphereboard->camera vector
-  Vec3f screenPos;
-  vec3f_copy(screenPos, dest[3]);
-
-  Vec3f forward = {
-    -screenPos[0],
-    -screenPos[1],
-    -screenPos[2]
-  };
+  // FORWARD = billboard->camera
+  Vec3f forward = { -dest[3][0], -dest[3][1], -dest[3][2] };
   vec3f_normalize(forward);
 
-  Vec3f up;
-  vec3f_copy(up, screenUp);
+  // RIGHT = world up × forward
   Vec3f right;
-  vec3f_cross(right, up, forward); // left-hand rule?
+  vec3f_cross(right, screenUp, forward); // left-hand rule?
   vec3f_normalize(right);
+
+  // UP = forward × right
+  Vec3f up;
   vec3f_cross(up, forward, right);
 
+  // set orientation of billboard
   vec3f_copy(dest[0], right);
   vec3f_copy(dest[1], up);
   vec3f_copy(dest[2], forward);
