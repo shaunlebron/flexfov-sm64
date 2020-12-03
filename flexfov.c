@@ -290,12 +290,18 @@ void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   vec3f_normalize(dest[2]);
   //mtxf_billboard(dest,src,pos,0);
 
+  // screen position of the billboard?
+  Vec3f screenPos;
+  vec3f_copy(screenPos, dest[3]);
+
+  /*
   Mat4 mtxf;
   s16 a = (90.0f / 180.0f * 32768);
   Vec3f translate = { 0, 0, 0 };
   Vec3s angles = { 0, a, 0 };
-  mtxf_rotate_xyz_and_translate(mtxf, translate, angles);
-  mtxf_mul(dest, mtxf, dest);
+  //mtxf_rotate_xyz_and_translate(mtxf, translate, angles);
+  //mtxf_mul(dest, mtxf, dest);
+  */
 
   Vec3f absPos;
   vec3f_copy(absPos, gCurGraphNodeObject->pos);
@@ -304,30 +310,25 @@ void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
     printf("src:\n"); log_matrix(src);
     printf("dest:\n"); log_matrix(dest);
   }
-  return;
+  //return;
 
   // billboards are always drawn to directly face the camera
-  Vec3f forward = { absPos[0] - cam[0], absPos[1] - cam[1], absPos[2] - cam[2] };
+  Vec3f forward = {
+    -screenPos[0],
+    -screenPos[1],
+    -screenPos[2]
+  };
   vec3f_normalize(forward);
 
-  // billboards are always drawn with their up vector equal to the forward camera’s up vector.
   Vec3f up = { 0, 1, 0 };
-  Vec3f left;
-  vec3f_cross(left, forward, up);
+  Vec3f right;
+  vec3f_cross(right, up, forward); // left-hand rule?
+  vec3f_normalize(right);
+  vec3f_cross(up, forward, right);
 
-  mtxf[0][0] = left[0];
-  mtxf[0][1] = left[1];
-  mtxf[0][2] = left[2];
-
-  mtxf[1][0] = up[0];
-  mtxf[1][1] = up[1];
-  mtxf[1][2] = up[2];
-
-  mtxf[2][0] = forward[0];
-  mtxf[2][1] = forward[1];
-  mtxf[2][2] = forward[2];
-
-  mtxf_mul(dest, mtxf, src);
+  vec3f_copy(dest[0], right);
+  vec3f_copy(dest[1], up);
+  vec3f_copy(dest[2], forward);
 }
 
 void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
