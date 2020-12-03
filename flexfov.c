@@ -270,7 +270,7 @@ void flexfov_set_cam(Vec4f *m) {
 // Billboards
 //------------------------------------------------------------------------------
 
-// CYLINDER BILLBOARDS
+// CYLBOARDS (billboards swiveling on a cylinder axis)
 // i.e. upright and swiveling on vertical axis to face camera
 // e.g. trees
 void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
@@ -296,9 +296,9 @@ void flexfov_mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   mtxf_mul(dest, mtxf, src);
 }
 
-// SPHERE BILLBOARDS
+// BALLBOARDS (billboards tangent to a ball around the camera)
 // e.g. coins, flames, bubbles, clouds
-void flexfov_mtxf_sphereboard(Mat4 dest, Mat4 src, Vec3f pos) {
+void flexfov_mtxf_ballboard(Mat4 dest, Mat4 src, Vec3f pos) {
   // set screen space position of billboard
   Mat4 mtxf;
   mtxf_translate(mtxf, pos);

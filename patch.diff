@@ -130,11 +130,11 @@
 + } else if (node->header.gfx.node.flags & GRAPH_RENDER_CYLBOARD) { if (flexfov_is_on()) flexfov_mtxf_cylboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->pos); else mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], node->header.gfx.pos, gCurGraphNodeCamera->roll);
   } else if (node->header.gfx.node.flags & GRAPH_RENDER_BILLBOARD) {
 
-+ if (flexfov_is_on()) flexfov_mtxf_sphereboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos); else
++ if (flexfov_is_on()) flexfov_mtxf_ballboard(gMatStack[gMatStackIndex+1], gMatStack[gMatStackIndex], node->header.gfx.pos); else
   mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
 
 @ static void geo_process_billboard
-+ if (flexfov_is_on()) flexfov_mtxf_sphereboard(gMatStack[gMatStackIndex], gMatStack[gMatStackIndex-1], translation); else
++ if (flexfov_is_on()) flexfov_mtxf_ballboard(gMatStack[gMatStackIndex], gMatStack[gMatStackIndex-1], translation); else
   mtxf_billboard(gMatStack[gMatStackIndex], gMatStack[gMatStackIndex - 1], translation,
 
 /src/game/spawn_object.c
