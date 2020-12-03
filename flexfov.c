@@ -194,6 +194,8 @@ void flexfov_update_input(void) {
 // Camera
 //------------------------------------------------------------------------------
 
+Vec3f screenUp;
+
 void flexfov_set_cam(Vec4f *m) {
 #define R0(i) pR[i]
 #define U0(i) pU[i]
@@ -231,6 +233,7 @@ void flexfov_set_cam(Vec4f *m) {
     VSET(U, B0);
   }
 
+  vec3f_copy(screenUp, m[1]);
 }
 
 extern s16 gMatStackIndex;
@@ -320,7 +323,8 @@ void flexfov_mtxf_sub_sphereboard(Mat4 dest, Mat4 src, Vec3f pos, Vec3f cam) {
   };
   vec3f_normalize(forward);
 
-  Vec3f up = { 0, 1, 0 };
+  Vec3f up;
+  vec3f_copy(up, screenUp);
   Vec3f right;
   vec3f_cross(right, up, forward); // left-hand rule?
   vec3f_normalize(right);
