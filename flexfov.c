@@ -48,6 +48,7 @@ u8 can_be_on(void) {
   extern struct MarioState *gMarioState;
   u32 action = gMarioState ? gMarioState->action : 0;
   u8 ignoreCutscene =
+    action == ACT_INTRO_CUTSCENE || // not supporting shifting viewports
     action == ACT_CREDITS_CUTSCENE || // not supporting shifting viewports
     action == ACT_END_PEACH_CUTSCENE; // not supporting the letterboxed viewports
   if (ignoreCutscene) return FALSE;
