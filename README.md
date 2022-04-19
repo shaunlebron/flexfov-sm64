@@ -33,9 +33,9 @@ Hold R to use extra controls:
 
 _**NOTE**: Only tested on x86 macbook, not yet building for m1 macbook_
 
-* `./patch.sh` applies `patch.diff` to the `sm64-port/` files (everything that needed to be changed in the game)
-* `make all` copies the `flexfov.*` files to `sm64-port/` (everything new that is added to the game)
-* `./run.sh` is a convenience script that runs `make all` then starts the game
+* `./patch.sh` applies `patch.diff` engine changes to the `sm64-port/`
+* `make all` copies the `flexfov.*` files to `sm64-port/`
+* `./run.sh` runs `make all` then starts the game
 
 ## Fixing visual artifacts
 
@@ -92,8 +92,11 @@ locked inside an invisible cylinder.
 
 ## Projection Method
 
-_My apologies for the description below, they are concise notes to myself that
-I will try to unpack at a later time._
+_**TLDR**: My apologies for the cryptic descriptions below, they are concise
+notes to myself that I will try to unpack later.  The basic idea is that we
+transition between Panini and Stereographic projection based on camera’s pitch
+angle, then we create a smooth transition to Mercator for larger FOVs using a
+mobius projection._
 
 We choose the best default projection based on your desired FOV, and let you
 scale the center region if you want.  We do this as fluidly as possible using
