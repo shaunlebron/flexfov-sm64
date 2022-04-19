@@ -1,10 +1,11 @@
 <img width="150px" src="img/LakituSM64.png" align="right">
 
-# flexfov for sm64
+# Flex FOV for Super Mario 64
 
-Extra camera controls for panoramic play.
+Hyper wide FOV controls for Super Mario 64.
 
-🎥 See [demo video](https://youtu.be/EX-GF2JhLaI).
+* 🎥 See [demo video](https://youtu.be/EX-GF2JhLaI).
+* 🎥 See [knob demo](https://imgur.com/a/yuxfbP7)
 
 ## Controls
 
@@ -28,13 +29,75 @@ Hold R to use extra controls:
 </tr>
 </table>
 
-## Construction
+## Build
+
+_**NOTE**: Only tested on x86 macbook, not yet building for m1 macbook_
+
+* `./patch.sh` applies `patch.diff` to the `sm64-port/` files (everything that needed to be changed in the game)
+* `make all` copies the `flexfov.*` files to `sm64-port/` (everything new that is added to the game)
+* `./run.sh` is a convenience script that runs `make all` then starts the game
+
+## Fixing visual artifacts
+
+It is simple in principle to render Super Mario 64 with an alternate projection,
+but there are many visual artifacts that had to be fixed:
+
+1. **Sky**: The cubemap is rendered without the sky.  The sky billboard is drawn first, then the projected cubemap is drawn over it.
+2. **Fog**: Fog is changed to scale based on distance from camera, not distance from projection plane.
+3. **Lighting**: Since lighting is always relative to the camera orientation in sm64, each cubeface submits to the lighting of the “front” cubeface.
+4. **Shake**: (removed)
+5. **Roll**: (removed)
+6. **Billboards**: draw tree billboards as “cylboards”, and every other billboard as “sphereboards” (see next section)
+
+## Theory: drawing billboards on cubemap
+
+A **Billboard** is usually drawn parallel to the projection plane and is
+rotated to share the camera’s “up” direction.
+
+However, we cannot do this when rendering a billboard to a **cubemap**, since
+we need a consistent orientation across all six projection planes.  The normal
+method will cause it to “crease” when appearing across the edges of a cubemap.
+
+The key is to make the billboard position and orientation a function of the
+*camera position only*.  In other words, when rendering to a cubemap (or *any*
+environment map), a billboard should be unaffected by the camera’s pitch, yaw,
+and roll.
+
+### Solution #1: “Sphereboard”
+
+A “sphereboard” is a billboard oriented along a special kind of sphere:
+
+* **center**: same as the camera’s position
+* **radius**: from the camera to the center of the billboard
+* **north**: the “north pole” of the sphere is locked to the world’s “up” direction (opposite to gravity)
+
+The billboard is thus oriented by two vectors:
+
+* **normal** is locked to the center of the sphere
+* **up** is locked to the north meridians of the sphere (like a compass)
+
+
+### Solution #2: “Cylboards”
+
+_Background: This is the solution we use for the tree billboards in Super Mario
+64, and nothing else.  “Cylboard” was coined by the [sm64ex] team.  When I asked
+them on Discord, they said they added it to make the trees look better with a mouse-look camera. I believe the
+original sm64 trees were designed to scale up when the camera was viewing them
+from above or below to make the leaves hide the incorrectly oriented trunk._
+
+Cylboards are billboards that only rotate horizontally to face the camera— as
+locked inside an invisible cylinder.
+
+[sm64ex]:https://github.com/sm64pc/sm64ex
+
+## Projection Method
+
+_My apologies for the description below, they are concise notes to myself that
+I will try to unpack at a later time._
 
 We choose the best default projection based on your desired FOV, and let you
 scale the center region if you want.  We do this as fluidly as possible using
 the following knobs, projections, and procedures.
-
-🎥 See [knob demo](https://imgur.com/a/yuxfbP7)
 
 ### Knobs
 
@@ -122,10 +185,9 @@ _Thanks to Jai for finding and sharing this transformation method. And thanks
 to Richard for asking if cropping a panini-zoomed mercator would be similar to
 panini alone, leading to our use of it to feather the transition._
 
+
 ## Outstanding Issues
 
-- billboards inside objects are inconsistent across cubefaces
-- snow trees are too dark
 - window in portrait mode clips cubefaces
 - mirror wall is lit inconsistenty across cubefaces
 - particles (snow, bubbles) are only rendered on front cube face
