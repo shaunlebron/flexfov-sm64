@@ -67,15 +67,14 @@ and roll.
 
 A “sphereboard” is a billboard oriented along a special kind of sphere:
 
-* **center**: same as the camera’s position
-* **radius**: from the camera to the center of the billboard
-* **north**: the “north pole” of the sphere is locked to the world’s “up” direction (opposite to gravity)
+* the **center** of the sphere is at the camera’s location
+* the **radius** of the spehre is the distance from the camera to the billboard
+* the **north pole** of the sphere is locked to the world’s “up” direction (opposite to gravity)
 
-The billboard is thus oriented by two vectors:
+The billboard is then oriented by two vectors:
 
-* **normal** is locked to the center of the sphere
-* **up** is locked to the north meridians of the sphere (like a compass)
-
+* **“normal” direction** is locked to the center of the sphere
+* **“up” direction** is locked to the north meridians of the sphere (like a compass)
 
 ### Solution #2: “Cylboards”
 
