@@ -4,8 +4,9 @@
 
 Hyper wide FOV controls for Super Mario 64.
 
+https://github.com/user-attachments/assets/ad5c549a-e5fe-4bea-b3c4-9ce0e7de9335
+
 * 🎥 See [demo video](https://youtu.be/EX-GF2JhLaI).
-* 🎥 See [knob demo](https://imgur.com/a/yuxfbP7)
 
 ## Controls
 
